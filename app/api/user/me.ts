@@ -1,13 +1,12 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
 import { NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
 
-export async function GET(req: Request) {
-  const session = await getServerSession(authOptions);
+export async function GET() {
+  const session = await getServerSession();
   if (!session || !session.user?.email) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -29,7 +28,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession();
   if (!session || !session.user?.email) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -41,7 +40,7 @@ export async function POST(req: Request) {
 
   // Parse form data
   const formData = await req.formData();
-  const updates: any = {};
+  const updates: Record<string, string> = {};
   ["name", "pronouns", "maritalStatus", "job", "school", "about"].forEach(
     (field) => {
       const value = formData.get(field);

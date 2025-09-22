@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useSession } from "next-auth/react";
 
 export default function SettingsPage() {
@@ -101,7 +102,13 @@ export default function SettingsPage() {
         {/* Logo on the left */}
         <div className="flex items-center">
           <Link href="/dashboard">
-            <img src="/logo.png" alt="Logo" className="h-10 w-auto" />
+            <Image
+              src="/logo.png"
+              alt="Logo"
+              width={40}
+              height={40}
+              className="h-10 w-auto"
+            />
           </Link>
         </div>
         {/* Dashboard link and user image on the right */}
@@ -113,9 +120,11 @@ export default function SettingsPage() {
             Dashboard
           </Link>
           {session?.user?.image && (
-            <img
+            <Image
               src={session.user.image}
               alt="User avatar"
+              width={40}
+              height={40}
               className="w-10 h-10 rounded-full border border-gray-300 shadow"
             />
           )}

@@ -3,13 +3,12 @@ import dbConnect from "@/lib/mongodb";
 import Post from "@/models/Post";
 
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import cloudinary from "@/lib/cloudinary";
 
 // GET: fetch all posts (latest first)
-export async function GET(req: NextRequest) {
+export async function GET() {
   await dbConnect();
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession();
   if (!session || !session.user?.email) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -19,9 +18,6 @@ export async function GET(req: NextRequest) {
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
-  const friendEmails = Array.isArray(user.friends) ? user.friends : [];
-  const allowedEmails = [session.user.email, ...friendEmails];
-
   // Feed: posts from self and other half
   const feedEmails = [session.user.email];
   if (user.otherHalf) feedEmails.push(user.otherHalf);
@@ -34,7 +30,7 @@ export async function GET(req: NextRequest) {
 // POST: create a new post
 export async function POST(req: NextRequest) {
   await dbConnect();
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession();
   if (!session || !session.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -54,17 +50,6 @@ export async function POST(req: NextRequest) {
     // Upload to Cloudinary
     const buffer = Buffer.from(await image.arrayBuffer());
     try {
-      const uploadRes = await cloudinary.uploader.upload_stream(
-        {
-          folder: "avocado-feed",
-          resource_type: "image",
-        },
-        (error, result) => {
-          if (error) throw error;
-          imageUrl = result?.secure_url || "";
-        }
-      );
-      // Use a Promise to wait for upload_stream
       await new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
           { folder: "avocado-feed", resource_type: "image" },
@@ -76,7 +61,7 @@ export async function POST(req: NextRequest) {
         );
         stream.end(buffer);
       });
-    } catch (e) {
+    } catch {
       return NextResponse.json(
         { error: "Image upload failed" },
         { status: 500 }

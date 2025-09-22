@@ -1,10 +1,12 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import type { AuthOptions } from "next-auth";
+// import type { AuthOptions } from "next-auth";
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
+import type { AdapterUser } from "next-auth/adapters";
+import type { Account, Profile, User as NextAuthUser } from "next-auth";
 
-export const authOptions: AuthOptions = {
+const authOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -18,7 +20,14 @@ export const authOptions: AuthOptions = {
     signIn: "/dashboard",
   },
   callbacks: {
-    async signIn({ user }) {
+    async signIn(params: {
+      user: AdapterUser | NextAuthUser;
+      account: Account | null;
+      profile?: Profile;
+      email?: { verificationRequest?: boolean };
+      credentials?: Record<string, unknown>;
+    }) {
+      const { user } = params;
       await dbConnect();
       // Only create if not exists
       const existing = await User.findOne({ email: user.email });

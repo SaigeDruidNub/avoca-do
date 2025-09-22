@@ -1,9 +1,7 @@
 "use client";
 import React, { useState, useRef } from "react";
 
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { redirect } from "next/navigation";
+// Removed unused imports
 
 import Link from "next/link";
 
@@ -38,7 +36,6 @@ export default function MyProfilePageWrapper() {
   }
   React.useEffect(() => {
     fetchProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function handleEditClick() {
@@ -70,7 +67,15 @@ export default function MyProfilePageWrapper() {
     e.preventDefault();
     const formData = new FormData();
     Object.entries(profile).forEach(([key, value]) => {
-      if (key !== "image") formData.append(key, value as any);
+      if (key !== "image")
+        formData.append(
+          key,
+          typeof value === "string"
+            ? value
+            : Array.isArray(value)
+            ? value.join(",")
+            : ""
+        );
     });
     if (imageFile) {
       formData.append("image", imageFile);

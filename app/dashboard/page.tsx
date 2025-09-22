@@ -1,5 +1,5 @@
 "use client";
-import React, { useMemo, useState, useEffect as useReactEffect } from "react";
+import React, { useState, useEffect as useReactEffect } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -9,7 +9,15 @@ export default function DashboardPage() {
   // Modal state for viewing images
   const [modalImage, setModalImage] = useState<string | null>(null);
   // Media feed state
-  const [posts, setPosts] = useState<any[]>([]);
+  type Post = {
+    _id: string;
+    userImage?: string;
+    userName?: string;
+    message?: string;
+    imageUrl?: string;
+    createdAt?: string;
+  };
+  const [posts, setPosts] = useState<Post[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(false);
   const [posting, setPosting] = useState(false);
   const [postError, setPostError] = useState<string | null>(null);
@@ -22,7 +30,7 @@ export default function DashboardPage() {
         const res = await fetch("/api/feed");
         const data = await res.json();
         setPosts(Array.isArray(data) ? data : []);
-      } catch (e) {
+      } catch {
         setPosts([]);
       } finally {
         setLoadingPosts(false);
@@ -31,7 +39,7 @@ export default function DashboardPage() {
     fetchPosts();
   }, []);
 
-  // Handle post submit
+  // Duplicate type and state removed
   async function handlePostSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setPosting(true);
@@ -51,10 +59,10 @@ export default function DashboardPage() {
       }
       form.reset();
       // Refresh posts
-  const postsRes = await fetch("/api/feed");
-  const data = await postsRes.json();
-  setPosts(Array.isArray(data) ? data : []);
-    } catch (e) {
+      const postsRes = await fetch("/api/feed");
+      const data = await postsRes.json();
+      setPosts(Array.isArray(data) ? data : []);
+    } catch {
       setPostError("Failed to post");
     } finally {
       setPosting(false);
@@ -84,7 +92,7 @@ export default function DashboardPage() {
           setLocError(null);
           localStorage.setItem("userLocation", JSON.stringify(coords));
         },
-        (error) => {
+        () => {
           setLocError("Unable to retrieve your location.");
         }
       );
@@ -129,7 +137,7 @@ export default function DashboardPage() {
         } else {
           setCityState(null);
         }
-      } catch (e) {
+      } catch {
         setCityState(null);
       }
     };
@@ -158,73 +166,40 @@ export default function DashboardPage() {
     }
   }, [status, session?.user?.email]);
 
-  // Mock data for demonstration
-  const userInterests = [
-    "Music",
-    "Art",
-    "Technology",
-    "Travel",
-    "Fitness",
-    "Movies",
-  ];
-  const friends = [
-    {
-      name: "Alex Kim",
-      image: `https://robohash.org/${encodeURIComponent(
-        "Alex Kim"
-      )}?set=set4&size=80x80`,
-      interests: ["Music", "Travel", "Movies"],
-    },
-    {
-      name: "Sam Lee",
-      image: `https://robohash.org/${encodeURIComponent(
-        "Sam Lee"
-      )}?set=set4&size=80x80`,
-      interests: ["Technology", "Fitness"],
-    },
-  ];
-  const allUsers = [
-    {
-      name: "Jordan Smith",
-      image: `https://robohash.org/${encodeURIComponent(
-        "Jordan Smith"
-      )}?set=set4&size=80x80`,
-      interests: ["Music", "Art", "Gaming"],
-    },
-    {
-      name: "Taylor Brooks",
-      image: `https://robohash.org/${encodeURIComponent(
-        "Taylor Brooks"
-      )}?set=set4&size=80x80`,
-      interests: ["Travel", "Cooking", "Movies"],
-    },
-    {
-      name: "Morgan Ray",
-      image: `https://robohash.org/${encodeURIComponent(
-        "Morgan Ray"
-      )}?set=set4&size=80x80`,
-      interests: ["Fitness", "Technology", "Art"],
-    },
-    {
-      name: "Jamie Fox",
-      image: `https://robohash.org/${encodeURIComponent(
-        "Jamie Fox"
-      )}?set=set4&size=80x80`,
-      interests: ["Movies", "Art"],
-    },
-  ];
-  // Filter out friends and suggest users with most shared interests
-  const friendNames = friends.map((f) => f.name);
-  const suggested = useMemo(() => {
-    return allUsers
-      .filter((u) => !friendNames.includes(u.name))
-      .map((u) => ({
-        ...u,
-        common: u.interests.filter((i) => userInterests.includes(i)),
-      }))
-      .sort((a, b) => b.common.length - a.common.length)
-      .slice(0, 3);
-  }, [allUsers, friendNames, userInterests]);
+  // Friends and suggested users state
+  interface Friend {
+    _id: string;
+    name: string;
+    image: string;
+    interests: string[];
+  }
+  interface SuggestedUser {
+    _id: string;
+    name?: string;
+    email?: string;
+    image?: string;
+    interests?: string[];
+    distance?: number;
+  }
+  const [friends] = useState<Friend[]>([]);
+  const [suggested, setSuggested] = useState<SuggestedUser[]>([]);
+
+  // Fetch suggested other halves based on radius and location
+  useEffect(() => {
+    const fetchSuggested = async () => {
+      if (!location) return;
+      try {
+        const res = await fetch(
+          `/api/user/suggested?lat=${location.lat}&lng=${location.lng}&radius=${radius}`
+        );
+        const data = await res.json();
+        setSuggested(Array.isArray(data) ? data : []);
+      } catch {
+        setSuggested([]);
+      }
+    };
+    fetchSuggested();
+  }, [location, radius]);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -321,7 +296,7 @@ export default function DashboardPage() {
             ) : (
               <ul className="space-y-4">
                 {friends.map((friend) => (
-                  <li key={friend.name} className="flex items-center gap-4">
+                  <li key={friend._id} className="flex items-center gap-4">
                     <img
                       src={friend.image}
                       alt={friend.name}
@@ -329,7 +304,7 @@ export default function DashboardPage() {
                     />
                     <div>
                       <Link
-                        href={`/profile/${encodeURIComponent(friend.name)}`}
+                        href={`/profile/${encodeURIComponent(friend._id)}`}
                         className="font-medium text-lg text-primary hover:underline focus:underline"
                       >
                         {friend.name}
@@ -343,7 +318,7 @@ export default function DashboardPage() {
               </ul>
             )}
           </div>
-          {/* Suggested Other Halves */}
+          {/* Suggested Other Halves (real users, by radius) */}
           <div className="bg-primary-dark rounded-lg shadow p-6">
             <h2 className="text-2xl font-semibold mb-4 text-primary">
               Suggested Other Halves
@@ -353,22 +328,31 @@ export default function DashboardPage() {
             ) : (
               <ul className="space-y-4">
                 {suggested.map((user) => (
-                  <li key={user.name} className="flex items-center gap-4">
+                  <li key={user._id} className="flex items-center gap-4">
                     <img
-                      src={user.image}
-                      alt={user.name}
+                      src={user.image || "/logo.png"}
+                      alt={user.name || user.email}
                       className="w-12 h-12 rounded-full border border-gray-300"
                     />
                     <div>
                       <Link
-                        href={`/profile/${encodeURIComponent(user.name)}`}
+                        href={`/profile/${encodeURIComponent(user._id)}`}
                         className="font-medium text-lg text-primary hover:underline focus:underline"
                       >
-                        {user.name}
+                        {user.name || user.email}
                       </Link>
                       <div className="text-sm text-foreground">
-                        Shared interests: {user.common.join(", ")}
+                        {user.interests && user.interests.length > 0 ? (
+                          <>Interests: {user.interests.join(", ")}</>
+                        ) : (
+                          <>No interests listed</>
+                        )}
                       </div>
+                      {user.distance != null && (
+                        <div className="text-xs text-foreground mt-1">
+                          {user.distance.toFixed(1)} miles away
+                        </div>
+                      )}
                     </div>
                   </li>
                 ))}
@@ -446,7 +430,7 @@ export default function DashboardPage() {
                         alt="Post image"
                         className="max-w-xs max-h-60 rounded-lg border mt-2 object-contain cursor-pointer hover:opacity-80 transition"
                         style={{ width: "100%", height: "auto" }}
-                        onClick={() => setModalImage(post.imageUrl)}
+                        onClick={() => setModalImage(post.imageUrl ?? null)}
                       />
                     )}
                     {/* Image Modal */}

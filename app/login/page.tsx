@@ -1,13 +1,13 @@
 "use client";
 import { signIn } from "next-auth/react";
 import { FaGoogle } from "react-icons/fa";
-import { useSession } from "next-auth/react";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+// import { useSession } from "next-auth/react";
+// import { useEffect } from "react";
+// import { useRouter } from "next/navigation";
 
 export default function Login() {
-  const { status } = useSession();
-  const router = useRouter();
+  // const { status } = useSession();
+  // const router = useRouter();
 
   /*useEffect(() => {
     if (status === "authenticated") router.replace("/dashboard"); // or /dashboard
