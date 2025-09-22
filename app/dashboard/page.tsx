@@ -6,11 +6,31 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function DashboardPage() {
+  // Friends and suggested users state (must be above useEffects that use them)
+  interface Friend {
+    _id: string;
+    name?: string;
+    image?: string;
+    interests?: string[];
+  }
+  interface SuggestedUser {
+    _id: string;
+    name?: string;
+    email?: string;
+    image?: string;
+    interests?: string[];
+    distance?: number;
+  }
+  const [friends, setFriends] = useState<Friend[]>([]);
+  const [loadingFriends, setLoadingFriends] = useState(false);
+  const [suggested, setSuggested] = useState<SuggestedUser[]>([]);
+
   // Modal state for viewing images
   const [modalImage, setModalImage] = useState<string | null>(null);
   // Media feed state
   type Post = {
     _id: string;
+    userId: string;
     userImage?: string;
     userName?: string;
     message?: string;
@@ -21,25 +41,12 @@ export default function DashboardPage() {
   const [loadingPosts, setLoadingPosts] = useState(false);
   const [posting, setPosting] = useState(false);
   const [postError, setPostError] = useState<string | null>(null);
+  const [userMap, setUserMap] = useState<Record<
+    string,
+    { name: string; image?: string }
+  > | null>(null);
 
-  // Fetch posts on mount
-  useEffect(() => {
-    const fetchPosts = async () => {
-      setLoadingPosts(true);
-      try {
-        const res = await fetch("/api/feed");
-        const data = await res.json();
-        setPosts(Array.isArray(data) ? data : []);
-      } catch {
-        setPosts([]);
-      } finally {
-        setLoadingPosts(false);
-      }
-    };
-    fetchPosts();
-  }, []);
-
-  // Duplicate type and state removed
+  // Post submit handler
   async function handlePostSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setPosting(true);
@@ -59,15 +66,62 @@ export default function DashboardPage() {
       }
       form.reset();
       // Refresh posts
-      const postsRes = await fetch("/api/feed");
-      const data = await postsRes.json();
-      setPosts(Array.isArray(data) ? data : []);
+      fetchPosts();
     } catch {
       setPostError("Failed to post");
     } finally {
       setPosting(false);
     }
   }
+
+  // Fetch posts (self + friends) and user info for each post
+  const fetchPosts = async () => {
+    setLoadingPosts(true);
+    try {
+      const res = await fetch("/api/feed");
+      if (res.ok) {
+        const data = await res.json();
+        setPosts(Array.isArray(data) ? data : []);
+        // Collect unique userIds from posts
+        const userIds = Array.from(
+          new Set((Array.isArray(data) ? data : []).map((p: any) => p.userId))
+        );
+        // Fetch user info for each userId
+        if (userIds.length > 0) {
+          const usersRes = await fetch(
+            `/api/user/byid?ids=${userIds.join(",")}`
+          );
+          if (usersRes.ok) {
+            const users = await usersRes.json();
+            // users: array of { _id, name, image }
+            const map: Record<string, { name: string; image?: string }> = {};
+            users.forEach((u: any) => {
+              map[u._id] = { name: u.name, image: u.image };
+            });
+            setUserMap(map);
+          } else {
+            setUserMap(null);
+          }
+        } else {
+          setUserMap(null);
+        }
+      } else {
+        setPosts([]);
+        setUserMap(null);
+      }
+    } catch {
+      setPosts([]);
+      setUserMap(null);
+    } finally {
+      setLoadingPosts(false);
+    }
+  };
+
+  // Fetch posts on mount
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
   // Radius state (in miles)
   const [radius, setRadius] = useState<number>(10);
   // Location state
@@ -166,23 +220,26 @@ export default function DashboardPage() {
     }
   }, [status, session?.user?.email]);
 
-  // Friends and suggested users state
-  interface Friend {
-    _id: string;
-    name: string;
-    image: string;
-    interests: string[];
-  }
-  interface SuggestedUser {
-    _id: string;
-    name?: string;
-    email?: string;
-    image?: string;
-    interests?: string[];
-    distance?: number;
-  }
-  const [friends] = useState<Friend[]>([]);
-  const [suggested, setSuggested] = useState<SuggestedUser[]>([]);
+  // Fetch friends (other halves) on mount
+  useEffect(() => {
+    const fetchFriends = async () => {
+      setLoadingFriends(true);
+      try {
+        const res = await fetch("/api/user/friends");
+        if (res.ok) {
+          const data = await res.json();
+          setFriends(Array.isArray(data) ? data : []);
+        } else {
+          setFriends([]);
+        }
+      } catch {
+        setFriends([]);
+      } finally {
+        setLoadingFriends(false);
+      }
+    };
+    fetchFriends();
+  }, []);
 
   // Fetch suggested other halves based on radius and location
   useEffect(() => {
@@ -291,15 +348,17 @@ export default function DashboardPage() {
             <h2 className="text-2xl font-semibold mb-4 text-primary">
               Your Other Halves
             </h2>
-            {friends.length === 0 ? (
+            {loadingFriends ? (
+              <div className="text-primary">Loading...</div>
+            ) : friends.length === 0 ? (
               <p className="text-foreground">You have no other halves yet.</p>
             ) : (
               <ul className="space-y-4">
                 {friends.map((friend) => (
                   <li key={friend._id} className="flex items-center gap-4">
                     <img
-                      src={friend.image}
-                      alt={friend.name}
+                      src={friend.image || "/logo.png"}
+                      alt={friend.name || "Other Half"}
                       className="w-12 h-12 rounded-full border border-gray-300"
                     />
                     <div>
@@ -307,10 +366,13 @@ export default function DashboardPage() {
                         href={`/profile/${encodeURIComponent(friend._id)}`}
                         className="font-medium text-lg text-primary hover:underline focus:underline"
                       >
-                        {friend.name}
+                        {friend.name || "Other Half"}
                       </Link>
-                      <div className="text-sm text-foreground">
-                        Interests: {friend.interests.join(", ")}
+                      <div className="text-sm text-primary">
+                        Interests:{" "}
+                        {friend.interests && friend.interests.length > 0
+                          ? friend.interests.join(", ")
+                          : "None"}
                       </div>
                     </div>
                   </li>
@@ -341,7 +403,7 @@ export default function DashboardPage() {
                       >
                         {user.name || user.email}
                       </Link>
-                      <div className="text-sm text-foreground">
+                      <div className="text-sm text-primary">
                         {user.interests && user.interests.length > 0 ? (
                           <>Interests: {user.interests.join(", ")}</>
                         ) : (
@@ -349,7 +411,7 @@ export default function DashboardPage() {
                         )}
                       </div>
                       {user.distance != null && (
-                        <div className="text-xs text-foreground mt-1">
+                        <div className="text-xs text-primary mt-1">
                           {user.distance.toFixed(1)} miles away
                         </div>
                       )}
@@ -400,73 +462,78 @@ export default function DashboardPage() {
               )}
             </form>
           </div>
+          {/* ...removed Other Halves' Feed section (now merged with main feed)... */}
+
           {/* Media Feed List */}
           <div className="flex flex-col gap-4">
             {loadingPosts ? (
-              <div className="text-primary">Loading feed...</div>
+              <div className="text-primary-dark">Loading feed...</div>
             ) : posts.length === 0 ? (
-              <div className="text-primary">
+              <div className="text-primary-dark">
                 No posts yet. Be the first to post!
               </div>
             ) : (
-              posts.map((post) => (
-                <div
-                  key={post._id}
-                  className="bg-primary-dark rounded-lg shadow p-4 flex gap-4 items-start"
-                >
-                  <img
-                    src={post.userImage || "/logo.png"}
-                    alt={post.userName || "User"}
-                    className="w-12 h-12 rounded-full border border-gray-300"
-                  />
-                  <div>
-                    <div className="font-bold text-primary">
-                      {post.userName || "User"}
-                    </div>
-                    <div className="text-primary mb-2">{post.message}</div>
-                    {post.imageUrl && (
-                      <img
-                        src={post.imageUrl}
-                        alt="Post image"
-                        className="max-w-xs max-h-60 rounded-lg border mt-2 object-contain cursor-pointer hover:opacity-80 transition"
-                        style={{ width: "100%", height: "auto" }}
-                        onClick={() => setModalImage(post.imageUrl ?? null)}
-                      />
-                    )}
-                    {/* Image Modal */}
-                    {modalImage && (
-                      <div
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70"
-                        onClick={() => setModalImage(null)}
-                      >
-                        <div
-                          className="relative max-w-3xl w-full flex flex-col items-center"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <button
-                            className="absolute top-2 right-2 text-white text-2xl bg-black bg-opacity-50 rounded-full px-3 py-1 hover:bg-opacity-80"
-                            onClick={() => setModalImage(null)}
-                            aria-label="Close"
-                          >
-                            &times;
-                          </button>
-                          <img
-                            src={modalImage}
-                            alt="Full size post image"
-                            className="rounded-lg border max-h-[80vh] max-w-full shadow-lg"
-                            style={{ objectFit: "contain" }}
-                          />
-                        </div>
+              posts.map((post) => {
+                const user = userMap?.[post.userId];
+                return (
+                  <div
+                    key={post._id}
+                    className="bg-primary-dark rounded-lg shadow p-4 flex gap-4 items-start"
+                  >
+                    <img
+                      src={user?.image || post.userImage || "/logo.png"}
+                      alt={user?.name || post.userName || "User"}
+                      className="w-12 h-12 rounded-full border border-gray-300"
+                    />
+                    <div>
+                      <div className="font-bold text-primary">
+                        {user?.name || post.userName || "User"}
                       </div>
-                    )}
-                    <div className="text-xs text-primary mt-1">
-                      {post.createdAt
-                        ? new Date(post.createdAt).toLocaleString()
-                        : ""}
+                      <div className="text-primary mb-2">{post.message}</div>
+                      {post.imageUrl && (
+                        <img
+                          src={post.imageUrl}
+                          alt="Post image"
+                          className="max-w-xs max-h-60 rounded-lg border mt-2 object-contain cursor-pointer hover:opacity-80 transition"
+                          style={{ width: "100%", height: "auto" }}
+                          onClick={() => setModalImage(post.imageUrl ?? null)}
+                        />
+                      )}
+                      {/* Image Modal */}
+                      {modalImage && (
+                        <div
+                          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70"
+                          onClick={() => setModalImage(null)}
+                        >
+                          <div
+                            className="relative max-w-3xl w-full flex flex-col items-center"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <button
+                              className="absolute top-2 right-2 text-white text-2xl bg-black bg-opacity-50 rounded-full px-3 py-1 hover:bg-opacity-80"
+                              onClick={() => setModalImage(null)}
+                              aria-label="Close"
+                            >
+                              &times;
+                            </button>
+                            <img
+                              src={modalImage}
+                              alt="Full size post image"
+                              className="rounded-lg border max-h-[80vh] max-w-full shadow-lg"
+                              style={{ objectFit: "contain" }}
+                            />
+                          </div>
+                        </div>
+                      )}
+                      <div className="text-xs text-primary mt-1">
+                        {post.createdAt
+                          ? new Date(post.createdAt).toLocaleString()
+                          : ""}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </section>

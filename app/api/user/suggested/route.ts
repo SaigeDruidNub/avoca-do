@@ -27,8 +27,19 @@ export async function GET(req: NextRequest) {
   const lng = parseFloat(searchParams.get("lng") || "0");
   const radius = parseFloat(searchParams.get("radius") || "10");
 
-  // Find users within radius, excluding self
+  // Find users within radius, excluding self and friends
   const userEmail = session?.user?.email;
+  let excludeIds: string[] = [];
+  if (userEmail) {
+    let me = await User.findOne({ email: userEmail }).lean();
+    // Defensive: if me is an array, use first element
+    if (Array.isArray(me)) me = me[0];
+    if (me && me.friends && Array.isArray(me.friends)) {
+      excludeIds = me.friends.map(String);
+    }
+    // Also exclude self
+    if (me && me._id) excludeIds.push(String(me._id));
+  }
   const users = await User.find({
     location: {
       $nearSphere: {
@@ -36,7 +47,7 @@ export async function GET(req: NextRequest) {
         $maxDistance: radius * 1609.34, // miles to meters
       },
     },
-    ...(userEmail ? { email: { $ne: userEmail } } : {}),
+    ...(excludeIds.length > 0 ? { _id: { $nin: excludeIds } } : {}),
   }).lean();
 
   // Add distance field for UI

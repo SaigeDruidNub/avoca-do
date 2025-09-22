@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 
 // Removed unused imports
 
@@ -20,6 +20,8 @@ export default function MyProfilePageWrapper() {
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [friends, setFriends] = useState<any[]>([]);
+  const [loadingFriends, setLoadingFriends] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch user session/profile on mount (client-side fetch)
@@ -34,9 +36,23 @@ export default function MyProfilePageWrapper() {
       window.location.href = "/login";
     }
   }
-  React.useEffect(() => {
+  useEffect(() => {
     fetchProfile();
+    fetchFriends();
   }, []);
+
+  async function fetchFriends() {
+    setLoadingFriends(true);
+    try {
+      const res = await fetch("/api/user/friends");
+      if (res.ok) {
+        const data = await res.json();
+        setFriends(data);
+      }
+    } finally {
+      setLoadingFriends(false);
+    }
+  }
 
   function handleEditClick() {
     setEditMode(true);
@@ -111,6 +127,33 @@ export default function MyProfilePageWrapper() {
         </div>
       </header>
       <div className="bg-primary-dark rounded-lg shadow p-8 w-full max-w-md flex flex-col items-center mx-auto mt-8">
+        {/* Other Halves Section */}
+        <div className="w-full mb-6">
+          <h2 className="text-xl font-bold text-primary mb-2">Other Halves</h2>
+          {loadingFriends ? (
+            <div className="text-primary">Loading...</div>
+          ) : friends.length === 0 ? (
+            <div className="text-primary">No other halves yet.</div>
+          ) : (
+            <ul className="space-y-2">
+              {friends.map((f) => (
+                <li
+                  key={f._id}
+                  className="flex items-center gap-3 bg-primary rounded p-2"
+                >
+                  <img
+                    src={f.image || "/logo.png"}
+                    alt={f.name || f.email}
+                    className="w-8 h-8 rounded-full border border-gray-300"
+                  />
+                  <span className="font-medium text-primary-dark">
+                    {f.name || f.email}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
         <h1 className="text-3xl font-bold text-primary mb-2">
           {profile.name || "My Profile"}
         </h1>

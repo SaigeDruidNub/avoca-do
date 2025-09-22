@@ -10,7 +10,7 @@ const UserSchema = new Schema({
   school: { type: String, default: "" },
   about: { type: String, default: "" },
   interests: { type: [String], default: [] },
-  friends: { type: [String], default: [] }, // Array of user emails
+  friends: { type: [String], default: [] }, // Array of user IDs (as strings)
   otherHalf: { type: String, default: "" }, // Email of user's real other half
   location: {
     type: { type: String, enum: ["Point"], default: "Point" },

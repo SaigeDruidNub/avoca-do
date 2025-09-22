@@ -6,7 +6,7 @@ import { getServerSession } from "next-auth";
 import cloudinary from "@/lib/cloudinary";
 
 // GET: fetch all posts (latest first)
-export async function GET() {
+export async function GET(req: NextRequest) {
   await dbConnect();
   const session = await getServerSession();
   if (!session || !session.user?.email) {
@@ -18,10 +18,29 @@ export async function GET() {
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
-  // Feed: posts from self and other half
-  const feedEmails = [session.user.email];
-  if (user.otherHalf) feedEmails.push(user.otherHalf);
-  const feedPosts = await Post.find({ userId: { $in: feedEmails } })
+
+  // Support filtering by userIds (for friend feed)
+  const { searchParams } = new URL(req.url);
+  const userIdsParam = searchParams.get("userIds");
+  if (userIdsParam) {
+    // userIds is a comma-separated list of user IDs (Mongo _id as string)
+    const userIds = userIdsParam
+      .split(",")
+      .map((id) => id.trim())
+      .filter(Boolean);
+    if (userIds.length === 0) {
+      return NextResponse.json([]);
+    }
+    // Find posts by userId (which is stored as stringified _id in Post.userId)
+    const posts = await Post.find({ userId: { $in: userIds } })
+      .sort({ createdAt: -1 })
+      .lean();
+    return NextResponse.json(posts);
+  }
+
+  // Default: posts from self and friends (by _id)
+  const feedIds = [user._id.toString(), ...(user.friends || [])];
+  const feedPosts = await Post.find({ userId: { $in: feedIds } })
     .sort({ createdAt: -1 })
     .lean();
   return NextResponse.json(feedPosts);
@@ -69,10 +88,16 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Find user to get _id
+  const UserModel = (await import("@/models/User")).default;
+  const user = await UserModel.findOne({ email: session.user.email });
+  if (!user) {
+    return NextResponse.json({ error: "User not found" }, { status: 404 });
+  }
   const post = await Post.create({
-    userId: session.user.email,
-    userName: session.user.name,
-    userImage: session.user.image,
+    userId: user._id.toString(),
+    userName: user.name,
+    userImage: user.image,
     message,
     imageUrl,
   });
