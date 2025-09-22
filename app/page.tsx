@@ -1,102 +1,79 @@
-import Image from "next/image";
+import NextImage from "next/image";
+import { FaLeaf, FaGlobe, FaUsers } from "react-icons/fa";
 
 export default function Home() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="font-sans min-h-screen flex flex-col items-center justify-between bg-primary text-secondary-dark">
+      <header className="w-full flex flex-col items-center py-10 bg-primary text-secondary">
+        <div className="flex items-center gap-4">
+          <NextImage
+            src="/logo.png"
+            alt="Avoca-do logo"
+            width={400}
+            height={200}
+          />
+        </div>
+        <p className="mt-4 text-lg sm:text-2xl font-medium max-w-xl text-center">
+          Find your people.{" "}
+          <span className="text-accent">Share your passions.</span> Connect with
+          like-minded friends on Avoca-do, the social platform for discovering
+          and building communities around your interests.
+        </p>
+      </header>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
+      <main className="flex-1 w-full flex flex-col items-center justify-center px-4 py-12 gap-16">
+        <section className="w-full max-w-3xl grid grid-cols-1 sm:grid-cols-3 gap-8">
+          <div className="bg-secondary/10 rounded-xl p-6 flex flex-col items-center shadow-md">
+            <FaGlobe size={40} className="text-accent" />
+            <h2 className="mt-4 text-xl font-bold text-secondary-dark">
+              Discover
+            </h2>
+            <p className="mt-2 text-center text-secondary-dark/80">
+              Explore communities and topics that match your unique interests.
+            </p>
+          </div>
+          <div className="bg-secondary/10 rounded-xl p-6 flex flex-col items-center shadow-md">
+            <FaUsers size={40} className="text-accent" />
+            <h2 className="mt-4 text-xl font-bold text-secondary-dark">
+              Connect
+            </h2>
+            <p className="mt-2 text-center text-secondary-dark/80">
+              Meet new friends, join groups, and chat with people who share your
+              passions.
+            </p>
+          </div>
+          <div className="bg-secondary/10 rounded-xl p-6 flex flex-col items-center shadow-md">
+            <FaLeaf size={40} className="text-accent" />
+            <h2 className="mt-4 text-xl font-bold text-secondary-dark">Grow</h2>
+            <p className="mt-2 text-center text-secondary-dark/80">
+              Build your own community and help others find their place.
+            </p>
+          </div>
+        </section>
+
+        <a
+          href="/login"
+          className="mt-8 px-8 py-4 rounded-full bg-accent text-white text-lg font-semibold shadow-lg hover:bg-secondary-dark transition-colors"
+        >
+          Login
+        </a>
+      </main>
+
+      <footer className="w-full py-6 flex flex-col items-center bg-primary-dark text-secondary text-sm gap-2">
+        <span>
+          &copy; {new Date().getFullYear()} Avoca-do. All rights reserved.
+        </span>
+        <div className="flex gap-4">
+          <a href="#" className="hover:underline">
+            About
           </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
+          <a href="#" className="hover:underline">
+            Contact
+          </a>
+          <a href="#" className="hover:underline">
+            Privacy
           </a>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
       </footer>
     </div>
   );
