@@ -1,0 +1,35 @@
+{
+  "dashboard": {
+    "title": "欢迎来到您的仪表板！",
+    "otherHalves": "您的另一半",
+    "suggestedOtherHalves": "推荐的另一半",
+    "noOtherHalves": "您还没有另一半。",
+    "noSuggestions": "目前没有建议。",
+    "interests": "兴趣爱好",
+    "noInterests": "无",
+    "noInterestsListed": "未列出兴趣爱好",
+    "milesAway": "英里外",
+    "location": "您的位置",
+    "searchRadius": "搜索半径",
+    "detectingLocation": "正在检测您的城市和州...",
+    "postToFeed": "发布到您的动态",
+    "whatsOnMind": "您在想什么？",
+    "posting": "发布中...",
+    "post": "发布",
+    "loadingFeed": "加载动态中...",
+    "noPosts": "还没有帖子。成为第一个发布的人！",
+    "user": "用户",
+    "loading": "加载中...",
+    "connectWithOtherHalves": "聊天",
+    "settings": "设置",
+    "profile": "个人资料"
+  },
+  "navigation": {
+    "mile": "英里",
+    "miles": "英里"
+  },
+  "common": {
+    "clear": "清除",
+    "copy": "复制"
+  }
+}

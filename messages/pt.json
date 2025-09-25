@@ -1,0 +1,35 @@
+{
+  "dashboard": {
+    "title": "Bem-vindo ao seu Painel!",
+    "otherHalves": "Suas Outras Metades",
+    "suggestedOtherHalves": "Outras Metades Sugeridas",
+    "noOtherHalves": "Você ainda não tem outras metades.",
+    "noSuggestions": "Nenhuma sugestão no momento.",
+    "interests": "Interesses",
+    "noInterests": "Nenhum",
+    "noInterestsListed": "Nenhum interesse listado",
+    "milesAway": "milhas de distância",
+    "location": "Sua localização",
+    "searchRadius": "Raio de busca",
+    "detectingLocation": "Detectando sua cidade e estado...",
+    "postToFeed": "Postar em seu feed",
+    "whatsOnMind": "O que você está pensando?",
+    "posting": "Postando...",
+    "post": "Postar",
+    "loadingFeed": "Carregando feed...",
+    "noPosts": "Ainda não há posts. Seja o primeiro a postar!",
+    "user": "Usuário",
+    "loading": "Carregando...",
+    "connectWithOtherHalves": "Chat",
+    "settings": "Configurações",
+    "profile": "Perfil"
+  },
+  "navigation": {
+    "mile": "milha",
+    "miles": "milhas"
+  },
+  "common": {
+    "clear": "Limpar",
+    "copy": "Copiar"
+  }
+}

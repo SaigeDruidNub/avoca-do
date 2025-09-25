@@ -12,6 +12,7 @@ const UserSchema = new Schema({
   interests: { type: [String], default: [] },
   friends: { type: [String], default: [] }, // Array of user IDs (as strings)
   otherHalf: { type: String, default: "" }, // Email of user's real other half
+  locationShared: { type: Boolean, default: false }, // Whether user has shared their location
   location: {
     type: { type: String, enum: ["Point"], default: "Point" },
     coordinates: { type: [Number], default: [0, 0] }, // [lng, lat]

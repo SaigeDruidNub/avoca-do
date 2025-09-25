@@ -1,0 +1,38 @@
+{
+  "dashboard": {
+    "title": "Welcome to your Dashboard!",
+    "otherHalves": "Your Other Halves",
+    "suggestedOtherHalves": "Suggested Other Halves",
+    "noOtherHalves": "You have no other halves yet.",
+    "noSuggestions": "No suggestions at this time.",
+    "interests": "Interests",
+    "noInterests": "None",
+    "noInterestsListed": "No interests listed",
+    "milesAway": "miles away",
+    "location": "Your location",
+    "searchRadius": "Search radius",
+    "detectingLocation": "Detecting your city and state...",
+    "postToFeed": "Post to your feed",
+    "whatsOnMind": "What's on your mind?",
+    "posting": "Posting...",
+    "post": "Post",
+    "loadingFeed": "Loading feed...",
+    "noPosts": "No posts yet. Be the first to post!",
+    "user": "User",
+    "loading": "Loading...",
+    "connectWithOtherHalves": "Chat",
+    "settings": "Settings",
+    "profile": "Profile",
+    "sharedInterests": "Shared interests",
+    "nearbyMatch": "📍 Nearby",
+    "interestMatch": "💡 Interest match"
+  },
+  "navigation": {
+    "mile": "mile",
+    "miles": "miles"
+  },
+  "common": {
+    "clear": "Clear",
+    "copy": "Copy"
+  }
+}

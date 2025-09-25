@@ -1,0 +1,35 @@
+{
+  "dashboard": {
+    "title": "Bienvenue sur votre tableau de bord !",
+    "otherHalves": "Vos Autres Moitiés",
+    "suggestedOtherHalves": "Autres Moitiés Suggérées",
+    "noOtherHalves": "Vous n'avez pas encore d'autres moitiés.",
+    "noSuggestions": "Aucune suggestion pour le moment.",
+    "interests": "Intérêts",
+    "noInterests": "Aucun",
+    "noInterestsListed": "Aucun intérêt listé",
+    "milesAway": "miles de distance",
+    "location": "Votre localisation",
+    "searchRadius": "Rayon de recherche",
+    "detectingLocation": "Détection de votre ville et état...",
+    "postToFeed": "Publier dans votre fil",
+    "whatsOnMind": "À quoi pensez-vous ?",
+    "posting": "Publication...",
+    "post": "Publier",
+    "loadingFeed": "Chargement du fil...",
+    "noPosts": "Pas encore de publications. Soyez le premier à publier !",
+    "user": "Utilisateur",
+    "loading": "Chargement...",
+    "connectWithOtherHalves": "Chat",
+    "settings": "Paramètres",
+    "profile": "Profil"
+  },
+  "navigation": {
+    "mile": "mile",
+    "miles": "miles"
+  },
+  "common": {
+    "clear": "Effacer",
+    "copy": "Copier"
+  }
+}

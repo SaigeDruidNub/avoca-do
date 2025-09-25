@@ -1,0 +1,35 @@
+{
+  "dashboard": {
+    "title": "Willkommen auf Ihrem Dashboard!",
+    "otherHalves": "Ihre Andere Hälften",
+    "suggestedOtherHalves": "Vorgeschlagene Andere Hälften",
+    "noOtherHalves": "Sie haben noch keine anderen Hälften.",
+    "noSuggestions": "Derzeit keine Vorschläge.",
+    "interests": "Interessen",
+    "noInterests": "Keine",
+    "noInterestsListed": "Keine Interessen aufgelistet",
+    "milesAway": "Meilen entfernt",
+    "location": "Ihr Standort",
+    "searchRadius": "Suchradius",
+    "detectingLocation": "Erkennung Ihrer Stadt und Region...",
+    "postToFeed": "In Ihren Feed posten",
+    "whatsOnMind": "Was beschäftigt Sie?",
+    "posting": "Wird gepostet...",
+    "post": "Posten",
+    "loadingFeed": "Feed wird geladen...",
+    "noPosts": "Noch keine Posts. Seien Sie der Erste, der postet!",
+    "user": "Benutzer",
+    "loading": "Lädt...",
+    "connectWithOtherHalves": "Chat",
+    "settings": "Einstellungen",
+    "profile": "Profil"
+  },
+  "navigation": {
+    "mile": "Meile",
+    "miles": "Meilen"
+  },
+  "common": {
+    "clear": "Löschen",
+    "copy": "Kopieren"
+  }
+}

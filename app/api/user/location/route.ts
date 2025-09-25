@@ -18,6 +18,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid location" }, { status: 400 });
   }
   await dbConnect();
-  await User.updateOne({ email: session.user.email }, { $set: { location } });
+  await User.updateOne(
+    { email: session.user.email },
+    { $set: { location, locationShared: true } }
+  );
   return NextResponse.json({ success: true });
 }

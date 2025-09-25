@@ -4,8 +4,21 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { useTranslation } from "../../components/LanguageProvider";
+import LanguageSwitcher from "../../components/LanguageSwitcher";
 
 export default function DashboardPage() {
+  const { t } = useTranslation();
+
+  // Helper function to generate RoboHash cat avatar
+  const getRoboHashAvatar = (identifier: string) => {
+    // Use user ID or name/email as identifier for consistent avatars
+    const hash = identifier || "default";
+    return `https://robohash.org/${encodeURIComponent(
+      hash
+    )}?set=set4&size=200x200`;
+  };
+
   // Friends and suggested users state (must be above useEffects that use them)
   interface Friend {
     _id: string;
@@ -20,6 +33,8 @@ export default function DashboardPage() {
     image?: string;
     interests?: string[];
     distance?: number;
+    matchType?: "location" | "interests" | "fallback";
+    sharedInterests?: string[];
   }
   const [friends, setFriends] = useState<Friend[]>([]);
   const [loadingFriends, setLoadingFriends] = useState(false);
@@ -132,7 +147,6 @@ export default function DashboardPage() {
   const [cityState, setCityState] = useState<string | null>(null);
   // Remove locationShared state
 
-  // Remove handleGetLocation, always update location on mount
   // On mount, check if location has been shared before
   useEffect(() => {
     if (typeof window !== "undefined" && navigator.geolocation) {
@@ -146,10 +160,21 @@ export default function DashboardPage() {
           setLocError(null);
           localStorage.setItem("userLocation", JSON.stringify(coords));
         },
-        () => {
-          setLocError("Unable to retrieve your location.");
+        (error) => {
+          console.log("Location access declined or failed:", error);
+          setLocError(
+            "Location sharing declined. You can still discover other halves through shared interests!"
+          );
+          // Set a default location for interest-based matching
+          setLocation({ lat: 0, lng: 0 });
         }
       );
+    } else {
+      // Fallback if geolocation not supported
+      setLocError(
+        "Geolocation not supported. You can still discover other halves through shared interests!"
+      );
+      setLocation({ lat: 0, lng: 0 });
     }
   }, []);
 
@@ -250,6 +275,7 @@ export default function DashboardPage() {
           `/api/user/suggested?lat=${location.lat}&lng=${location.lng}&radius=${radius}`
         );
         const data = await res.json();
+        console.log("Suggested users data:", data); // Debug log
         setSuggested(Array.isArray(data) ? data : []);
       } catch {
         setSuggested([]);
@@ -267,7 +293,7 @@ export default function DashboardPage() {
   if (status === "loading") {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center bg-gray-50">
-        <div className="text-lg text-gray-600">Loading...</div>
+        <div className="text-lg text-gray-600">{t("dashboard.loading")}</div>
       </main>
     );
   }
@@ -282,11 +308,18 @@ export default function DashboardPage() {
           </Link>
         </div>
         <div className="flex items-center gap-4">
+          <LanguageSwitcher />
+          <Link
+            href="/chat"
+            className="text-sm font-medium text-foreground hover:underline"
+          >
+            {t("dashboard.connectWithOtherHalves")}
+          </Link>
           <Link
             href="/settings"
             className="text-sm font-medium text-foreground hover:underline"
           >
-            Settings
+            {t("dashboard.settings")}
           </Link>
           {session?.user && (
             <Link href="/profile" className="flex items-center gap-2 group">
@@ -298,7 +331,7 @@ export default function DashboardPage() {
                 />
               )}
               <span className="text-primary font-medium text-base group-hover:underline">
-                {session.user.name || "Profile"}
+                {session.user.name || t("dashboard.profile")}
               </span>
             </Link>
           )}
@@ -313,9 +346,9 @@ export default function DashboardPage() {
             <div className="mb-2 flex items-center gap-2">
               <label
                 htmlFor="radius"
-                className="text-sm text-primary font-medium"
+                className="text-sm text-secondary font-medium"
               >
-                Search radius:
+                {t("dashboard.searchRadius")}:
               </label>
               <select
                 id="radius"
@@ -323,22 +356,25 @@ export default function DashboardPage() {
                 onChange={(e) => setRadius(Number(e.target.value))}
                 className="rounded border-gray-300 px-2 py-1 text-sm text-primary"
               >
-                <option value={1}>1 mile</option>
-                <option value={5}>5 miles</option>
-                <option value={10}>10 miles</option>
-                <option value={25}>25 miles</option>
-                <option value={50}>50 miles</option>
-                <option value={100}>100 miles</option>
+                <option value={1}>1 {t("navigation.mile")}</option>
+                <option value={5}>5 {t("navigation.miles")}</option>
+                <option value={10}>10 {t("navigation.miles")}</option>
+                <option value={25}>25 {t("navigation.miles")}</option>
+                <option value={50}>50 {t("navigation.miles")}</option>
+                <option value={100}>100 {t("navigation.miles")}</option>
               </select>
             </div>
             {location && cityState && (
-              <div className="text-sm text-primary">
-                {`Your location: ${cityState}`}
+              <div className="text-sm">
+                <span className="text-secondary">
+                  {t("dashboard.location")}:{" "}
+                </span>
+                <span className="text-primary">{cityState}</span>
               </div>
             )}
             {location && !cityState && !locError && (
               <div className="text-sm text-primary">
-                Detecting your city and state...
+                {t("dashboard.detectingLocation")}
               </div>
             )}
             {locError && <div className="text-sm text-red-500">{locError}</div>}
@@ -346,33 +382,57 @@ export default function DashboardPage() {
           {/* Other Halves (Friends) */}
           <div className="bg-primary-dark rounded-lg shadow p-6">
             <h2 className="text-2xl font-semibold mb-4 text-primary">
-              Your Other Halves
+              {t("dashboard.otherHalves")}
             </h2>
             {loadingFriends ? (
-              <div className="text-primary">Loading...</div>
+              <div className="text-primary">{t("dashboard.loading")}</div>
             ) : friends.length === 0 ? (
-              <p className="text-foreground">You have no other halves yet.</p>
+              <p className="text-secondary">{t("dashboard.noOtherHalves")}</p>
             ) : (
               <ul className="space-y-4">
                 {friends.map((friend) => (
                   <li key={friend._id} className="flex items-center gap-4">
                     <img
-                      src={friend.image || "/logo.png"}
+                      src={friend.image || getRoboHashAvatar(friend._id)}
                       alt={friend.name || "Other Half"}
                       className="w-12 h-12 rounded-full border border-gray-300"
+                      onError={(e) => {
+                        console.log(
+                          `Failed to load friend image for ${friend.name}:`,
+                          friend.image
+                        );
+                        // Try to fix Google image URL
+                        const currentSrc = e.currentTarget.src;
+                        if (
+                          currentSrc.includes("googleusercontent.com") &&
+                          !currentSrc.includes("referrer")
+                        ) {
+                          const newUrl = friend.image?.replace(
+                            "=s96-c",
+                            "=s96-c-rp-mo-br100"
+                          );
+                          if (newUrl && newUrl !== currentSrc) {
+                            e.currentTarget.src = newUrl;
+                            return;
+                          }
+                        }
+                        e.currentTarget.src = getRoboHashAvatar(friend._id);
+                      }}
+                      referrerPolicy="no-referrer"
+                      crossOrigin="anonymous"
                     />
                     <div>
                       <Link
                         href={`/profile/${encodeURIComponent(friend._id)}`}
-                        className="font-medium text-lg text-primary hover:underline focus:underline"
+                        className="font-bold text-lg text-secondary hover:underline focus:underline"
                       >
                         {friend.name || "Other Half"}
                       </Link>
                       <div className="text-sm text-primary">
-                        Interests:{" "}
+                        {t("dashboard.interests")}:{" "}
                         {friend.interests && friend.interests.length > 0
                           ? friend.interests.join(", ")
-                          : "None"}
+                          : t("dashboard.noInterests")}
                       </div>
                     </div>
                   </li>
@@ -383,41 +443,94 @@ export default function DashboardPage() {
           {/* Suggested Other Halves (real users, by radius) */}
           <div className="bg-primary-dark rounded-lg shadow p-6">
             <h2 className="text-2xl font-semibold mb-4 text-primary">
-              Suggested Other Halves
+              {t("dashboard.suggestedOtherHalves")}
             </h2>
             {suggested.length === 0 ? (
-              <p className="text-foreground">No suggestions at this time.</p>
+              <p className="text-secondary">{t("dashboard.noSuggestions")}</p>
             ) : (
               <ul className="space-y-4">
-                {suggested.map((user) => (
-                  <li key={user._id} className="flex items-center gap-4">
-                    <img
-                      src={user.image || "/logo.png"}
-                      alt={user.name || user.email}
-                      className="w-12 h-12 rounded-full border border-gray-300"
-                    />
-                    <div>
-                      <Link
-                        href={`/profile/${encodeURIComponent(user._id)}`}
-                        className="font-medium text-lg text-primary hover:underline focus:underline"
-                      >
-                        {user.name || user.email}
-                      </Link>
-                      <div className="text-sm text-primary">
-                        {user.interests && user.interests.length > 0 ? (
-                          <>Interests: {user.interests.join(", ")}</>
-                        ) : (
-                          <>No interests listed</>
+                {suggested.map((user) => {
+                  console.log(
+                    `User ${user.name || user.email} image:`,
+                    user.image
+                  ); // Debug log
+                  return (
+                    <li key={user._id} className="flex items-center gap-4">
+                      <img
+                        src={user.image || getRoboHashAvatar(user._id)}
+                        alt={user.name || user.email}
+                        className="w-12 h-12 rounded-full border border-gray-300"
+                        onError={(e) => {
+                          console.log(
+                            `Failed to load image for ${
+                              user.name || user.email
+                            }:`,
+                            user.image
+                          );
+                          // Try to fix Google image URL by adding referrer policy bypass
+                          const currentSrc = e.currentTarget.src;
+                          if (
+                            currentSrc.includes("googleusercontent.com") &&
+                            !currentSrc.includes("referrer")
+                          ) {
+                            // Try the image URL with a different approach
+                            const newUrl = user.image?.replace(
+                              "=s96-c",
+                              "=s96-c-rp-mo-br100"
+                            );
+                            if (newUrl && newUrl !== currentSrc) {
+                              e.currentTarget.src = newUrl;
+                              return;
+                            }
+                          }
+                          // Final fallback to RoboHash cat avatar
+                          e.currentTarget.src = getRoboHashAvatar(user._id);
+                        }}
+                        referrerPolicy="no-referrer"
+                        crossOrigin="anonymous"
+                      />
+                      <div>
+                        <Link
+                          href={`/profile/${encodeURIComponent(user._id)}`}
+                          className="font-bold text-lg text-secondary hover:underline focus:underline"
+                        >
+                          {user.name || user.email}
+                        </Link>
+                        <div className="text-sm text-primary">
+                          {user.matchType === "interests" &&
+                          user.sharedInterests ? (
+                            <>
+                              {t("dashboard.sharedInterests")}:{" "}
+                              {user.sharedInterests.join(", ")}
+                            </>
+                          ) : user.interests && user.interests.length > 0 ? (
+                            <>
+                              {t("dashboard.interests")}:{" "}
+                              {user.interests.join(", ")}
+                            </>
+                          ) : (
+                            <>{t("dashboard.noInterestsListed")}</>
+                          )}
+                        </div>
+                        {user.distance != null && (
+                          <div className="text-xs text-primary mt-1">
+                            {user.distance.toFixed(1)}{" "}
+                            {t("dashboard.milesAway")}
+                          </div>
+                        )}
+                        {user.matchType && (
+                          <div className="text-xs text-accent mt-1">
+                            {user.matchType === "location"
+                              ? t("dashboard.nearbyMatch")
+                              : user.matchType === "interests"
+                              ? t("dashboard.interestMatch")
+                              : "🔍 Discover"}
+                          </div>
                         )}
                       </div>
-                      {user.distance != null && (
-                        <div className="text-xs text-primary mt-1">
-                          {user.distance.toFixed(1)} miles away
-                        </div>
-                      )}
-                    </div>
-                  </li>
-                ))}
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>
@@ -425,19 +538,17 @@ export default function DashboardPage() {
         {/* Right column: Media Feed */}
         <section className="flex-1 flex flex-col gap-6">
           {/* Welcome */}
-          <h1 className="text-4xl font-bold mb-2">
-            Welcome to your Dashboard!
-          </h1>
+          <h1 className="text-4xl font-bold mb-2">{t("dashboard.title")}</h1>
 
           {/* Media Feed Post Form */}
           <div className="bg-primary-dark rounded-lg shadow p-6 mb-4">
             <h2 className="text-xl font-semibold mb-2 text-primary">
-              Post to your feed
+              {t("dashboard.postToFeed")}
             </h2>
             <form className="flex flex-col gap-3" onSubmit={handlePostSubmit}>
               <textarea
-                className="border text-primary border-gray-300 rounded p-2 resize-none min-h-[60px]"
-                placeholder="What's on your mind?"
+                className="border text-secondary border-gray-300 rounded p-2 resize-none min-h-[60px]"
+                placeholder={t("dashboard.whatsOnMind")}
                 name="message"
                 rows={3}
                 required
@@ -455,7 +566,7 @@ export default function DashboardPage() {
                 className="bg-primary text-white rounded px-4 py-2 font-medium hover:bg-primary-dark disabled:opacity-60"
                 disabled={posting}
               >
-                {posting ? "Posting..." : "Post"}
+                {posting ? t("dashboard.posting") : t("dashboard.post")}
               </button>
               {postError && (
                 <div className="text-red-500 text-sm">{postError}</div>
@@ -467,11 +578,11 @@ export default function DashboardPage() {
           {/* Media Feed List */}
           <div className="flex flex-col gap-4">
             {loadingPosts ? (
-              <div className="text-primary-dark">Loading feed...</div>
-            ) : posts.length === 0 ? (
               <div className="text-primary-dark">
-                No posts yet. Be the first to post!
+                {t("dashboard.loadingFeed")}
               </div>
+            ) : posts.length === 0 ? (
+              <div className="text-primary-dark">{t("dashboard.noPosts")}</div>
             ) : (
               posts.map((post) => {
                 const user = userMap?.[post.userId];
@@ -486,8 +597,8 @@ export default function DashboardPage() {
                       className="w-12 h-12 rounded-full border border-gray-300"
                     />
                     <div>
-                      <div className="font-bold text-primary">
-                        {user?.name || post.userName || "User"}
+                      <div className="font-bold text-secondary">
+                        {user?.name || post.userName || t("dashboard.user")}
                       </div>
                       <div className="text-primary mb-2">{post.message}</div>
                       {post.imageUrl && (

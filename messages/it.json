@@ -1,0 +1,35 @@
+{
+  "dashboard": {
+    "title": "Benvenuto nella tua Dashboard!",
+    "otherHalves": "Le Tue Altre Metà",
+    "suggestedOtherHalves": "Altre Metà Suggerite",
+    "noOtherHalves": "Non hai ancora altre metà.",
+    "noSuggestions": "Nessun suggerimento al momento.",
+    "interests": "Interessi",
+    "noInterests": "Nessuno",
+    "noInterestsListed": "Nessun interesse elencato",
+    "milesAway": "miglia di distanza",
+    "location": "La tua posizione",
+    "searchRadius": "Raggio di ricerca",
+    "detectingLocation": "Rilevamento della tua città e regione...",
+    "postToFeed": "Posta nel tuo feed",
+    "whatsOnMind": "A cosa stai pensando?",
+    "posting": "Pubblicando...",
+    "post": "Pubblica",
+    "loadingFeed": "Caricamento feed...",
+    "noPosts": "Nessun post ancora. Sii il primo a pubblicare!",
+    "user": "Utente",
+    "loading": "Caricamento...",
+    "connectWithOtherHalves": "Chat",
+    "settings": "Impostazioni",
+    "profile": "Profilo"
+  },
+  "navigation": {
+    "mile": "miglio",
+    "miles": "miglia"
+  },
+  "common": {
+    "clear": "Cancella",
+    "copy": "Copia"
+  }
+}

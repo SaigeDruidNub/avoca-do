@@ -42,6 +42,7 @@ export const authOptions = {
           school: "",
           about: "",
           interests: [],
+          locationShared: false,
           location: {
             type: "Point",
             coordinates: [0, 0],

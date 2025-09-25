@@ -16,6 +16,7 @@ export async function GET() {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
   return NextResponse.json({
+    _id: user._id,
     name: user.name,
     email: user.email,
     image: user.image,

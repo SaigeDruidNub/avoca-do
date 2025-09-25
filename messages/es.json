@@ -1,0 +1,35 @@
+{
+  "dashboard": {
+    "title": "¡Bienvenido a tu Panel!",
+    "otherHalves": "Tus Otras Mitades",
+    "suggestedOtherHalves": "Otras Mitades Sugeridas",
+    "noOtherHalves": "Aún no tienes otras mitades.",
+    "noSuggestions": "No hay sugerencias en este momento.",
+    "interests": "Intereses",
+    "noInterests": "Ninguno",
+    "noInterestsListed": "Sin intereses listados",
+    "milesAway": "millas de distancia",
+    "location": "Tu ubicación",
+    "searchRadius": "Radio de búsqueda",
+    "detectingLocation": "Detectando tu ciudad y estado...",
+    "postToFeed": "Publicar en tu feed",
+    "whatsOnMind": "¿Qué estás pensando?",
+    "posting": "Publicando...",
+    "post": "Publicar",
+    "loadingFeed": "Cargando feed...",
+    "noPosts": "¡Aún no hay publicaciones. Sé el primero en publicar!",
+    "user": "Usuario",
+    "loading": "Cargando...",
+    "connectWithOtherHalves": "Chat",
+    "settings": "Configuración",
+    "profile": "Perfil"
+  },
+  "navigation": {
+    "mile": "milla",
+    "miles": "millas"
+  },
+  "common": {
+    "clear": "Limpiar",
+    "copy": "Copiar"
+  }
+}

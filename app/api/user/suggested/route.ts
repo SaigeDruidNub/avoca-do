@@ -27,39 +27,164 @@ export async function GET(req: NextRequest) {
   const lng = parseFloat(searchParams.get("lng") || "0");
   const radius = parseFloat(searchParams.get("radius") || "10");
 
-  // Find users within radius, excluding self and friends
+  console.log("Suggested API called with:", {
+    lat,
+    lng,
+    radius,
+    userEmail: session?.user?.email,
+  });
+
+  // Find current user and get exclude IDs
   const userEmail = session?.user?.email;
   let excludeIds: string[] = [];
+  let currentUser: any = null;
+
   if (userEmail) {
-    let me = await User.findOne({ email: userEmail }).lean();
-    // Defensive: if me is an array, use first element
-    if (Array.isArray(me)) me = me[0];
-    if (me && me.friends && Array.isArray(me.friends)) {
-      excludeIds = me.friends.map(String);
+    currentUser = await User.findOne({ email: userEmail }).lean();
+    console.log("Current user found:", currentUser ? "Yes" : "No");
+    console.log("Current user interests:", currentUser?.interests);
+    console.log("Current user locationShared:", currentUser?.locationShared);
+
+    // Defensive: if currentUser is an array, use first element
+    if (Array.isArray(currentUser)) currentUser = currentUser[0];
+    if (
+      currentUser &&
+      currentUser.friends &&
+      Array.isArray(currentUser.friends)
+    ) {
+      excludeIds = currentUser.friends.map(String);
     }
     // Also exclude self
-    if (me && me._id) excludeIds.push(String(me._id));
+    if (currentUser && currentUser._id)
+      excludeIds.push(String(currentUser._id));
   }
-  const users = await User.find({
-    location: {
-      $nearSphere: {
-        $geometry: { type: "Point", coordinates: [lng, lat] },
-        $maxDistance: radius * 1609.34, // miles to meters
-      },
-    },
-    ...(excludeIds.length > 0 ? { _id: { $nin: excludeIds } } : {}),
-  }).lean();
 
-  // Add distance field for UI
-  // Removed unused UserWithLocation interface
-  const suggested = users.map((u) => {
+  console.log("Exclude IDs:", excludeIds);
+
+  let locationBasedUsers: any[] = [];
+  let interestBasedUsers: any[] = [];
+
+  // 1. Try location-based matching first (for users who have shared location)
+  if (lat !== 0 || lng !== 0) {
+    try {
+      console.log("Attempting location-based search...");
+      locationBasedUsers = await User.find({
+        $or: [
+          { locationShared: true },
+          { locationShared: { $exists: false } }, // Include users where field doesn't exist (existing users)
+        ],
+        location: {
+          $nearSphere: {
+            $geometry: { type: "Point", coordinates: [lng, lat] },
+            $maxDistance: radius * 1609.34, // miles to meters
+          },
+        },
+        ...(excludeIds.length > 0 ? { _id: { $nin: excludeIds } } : {}),
+      }).lean();
+      console.log("Location-based users found:", locationBasedUsers.length);
+    } catch (error) {
+      console.log("Location-based search failed:", error);
+      locationBasedUsers = [];
+    }
+  }
+
+  // 2. Interest-based matching for users without location or to supplement results
+  if (
+    currentUser &&
+    currentUser.interests &&
+    Array.isArray(currentUser.interests) &&
+    currentUser.interests.length > 0
+  ) {
+    console.log(
+      "Searching for interest-based matches with interests:",
+      currentUser.interests
+    );
+
+    // First try users who explicitly haven't shared location
+    interestBasedUsers = await User.find({
+      $and: [
+        { interests: { $in: currentUser.interests } }, // Users with shared interests
+        {
+          $or: [
+            { locationShared: false },
+            { locationShared: { $exists: false } },
+          ],
+        }, // Users who haven't shared location or field doesn't exist
+        ...(excludeIds.length > 0 ? [{ _id: { $nin: excludeIds } }] : []),
+      ],
+    }).lean();
+
+    console.log("Interest-based users found:", interestBasedUsers.length);
+  } else {
+    console.log(
+      "No interest-based search - user has no interests or not found"
+    );
+  }
+
+  // 3. Combine and format results
+  const locationResults = locationBasedUsers.map((u) => {
     const userLat = (u.location?.coordinates?.[1] as number) || 0;
     const userLng = (u.location?.coordinates?.[0] as number) || 0;
     return {
       ...u,
       _id: String(u._id),
       distance: getDistance(lat, lng, userLat, userLng),
+      matchType: "location" as const,
     };
+  });
+
+  const interestResults = interestBasedUsers.map((u) => {
+    const sharedInterests =
+      currentUser?.interests?.filter((interest: string) =>
+        u.interests?.includes(interest)
+      ) || [];
+    return {
+      ...u,
+      _id: String(u._id),
+      distance: null, // No distance for interest-based matches
+      matchType: "interests" as const,
+      sharedInterests: sharedInterests,
+    };
+  });
+
+  // 4. Remove duplicates (users who appear in both lists) - prioritize location matches
+  const locationUserIds = new Set(locationResults.map((u) => u._id));
+  const uniqueInterestResults = interestResults.filter(
+    (u) => !locationUserIds.has(u._id)
+  );
+
+  // 5. Combine results with location matches first, then interest matches
+  let suggested = [...locationResults, ...uniqueInterestResults];
+
+  // 6. Fallback: if no results found, get some random users (excluding friends and self)
+  if (suggested.length === 0 && userEmail) {
+    console.log("No matches found, falling back to random users...");
+    try {
+      const fallbackUsers = await User.find({
+        ...(excludeIds.length > 0 ? { _id: { $nin: excludeIds } } : {}),
+      })
+        .limit(5)
+        .lean();
+
+      const fallbackResults = fallbackUsers.map((u) => ({
+        ...u,
+        _id: String(u._id),
+        distance: null,
+        matchType: "fallback" as const,
+      }));
+
+      suggested = fallbackResults;
+      console.log("Fallback users found:", fallbackResults.length);
+    } catch (error) {
+      console.log("Fallback search failed:", error);
+    }
+  }
+
+  console.log("Final results:", {
+    locationResults: locationResults.length,
+    interestResults: interestResults.length,
+    uniqueInterestResults: uniqueInterestResults.length,
+    totalSuggested: suggested.length,
   });
 
   return NextResponse.json(suggested);

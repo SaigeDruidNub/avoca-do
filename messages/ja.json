@@ -1,0 +1,35 @@
+{
+  "dashboard": {
+    "title": "ダッシュボードへようこそ！",
+    "otherHalves": "あなたの他の半分",
+    "suggestedOtherHalves": "おすすめの他の半分",
+    "noOtherHalves": "まだ他の半分がいません。",
+    "noSuggestions": "現在、提案はありません。",
+    "interests": "興味・関心",
+    "noInterests": "なし",
+    "noInterestsListed": "興味が記載されていません",
+    "milesAway": "マイル離れています",
+    "location": "あなたの位置",
+    "searchRadius": "検索範囲",
+    "detectingLocation": "あなたの都市と州を検出中...",
+    "postToFeed": "フィードに投稿",
+    "whatsOnMind": "何を考えていますか？",
+    "posting": "投稿中...",
+    "post": "投稿",
+    "loadingFeed": "フィードを読み込み中...",
+    "noPosts": "まだ投稿がありません。最初に投稿してください！",
+    "user": "ユーザー",
+    "loading": "読み込み中...",
+    "connectWithOtherHalves": "チャット",
+    "settings": "設定",
+    "profile": "プロフィール"
+  },
+  "navigation": {
+    "mile": "マイル",
+    "miles": "マイル"
+  },
+  "common": {
+    "clear": "クリア",
+    "copy": "コピー"
+  }
+}

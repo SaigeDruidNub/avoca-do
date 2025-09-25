@@ -17,8 +17,8 @@ export default function Login() {
   //if (status === "authenticated") return null;
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-primary text-secondary-dark font-sans">
-      <div className="bg-white/90 rounded-xl shadow-lg p-8 flex flex-col items-center gap-6 w-full max-w-sm">
-        <h1 className="text-3xl font-bold mb-2 text-primary-dark">
+      <div className="bg-primary-dark rounded-xl shadow-lg p-8 flex flex-col items-center gap-6 w-full max-w-sm">
+        <h1 className="text-3xl font-bold mb-2 text-secondary">
           Login to Avoca-do
         </h1>
         <p className="text-center text-secondary-dark/80 mb-4">
