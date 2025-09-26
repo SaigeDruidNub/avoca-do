@@ -42,7 +42,17 @@ export default async function ProfilePage({
             &larr; Back to Dashboard
           </button>
         </a>
-        <AddOtherHalfButton friendId={user._id} />
+        <div className="flex gap-2">
+          <a href={`/chat?with=${user._id}`}>
+            <button
+              className="bg-blue-500 text-white px-4 py-2 rounded shadow hover:bg-blue-600 transition"
+              type="button"
+            >
+              💬 Send Message
+            </button>
+          </a>
+          <AddOtherHalfButton friendId={user._id} />
+        </div>
       </div>
       <div className="bg-primary-dark rounded-lg shadow p-8 w-full max-w-md flex flex-col items-center">
         {/* Consider using next/image for better performance */}

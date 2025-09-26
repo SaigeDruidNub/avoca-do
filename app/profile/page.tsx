@@ -119,6 +119,12 @@ export default function MyProfilePageWrapper() {
         </div>
         <div className="flex items-center gap-4">
           <Link
+            href="/chat"
+            className="text-sm font-medium text-foreground hover:underline"
+          >
+            💬 Messages
+          </Link>
+          <Link
             href="/settings"
             className="text-sm font-medium text-foreground hover:underline"
           >

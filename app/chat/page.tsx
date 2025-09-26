@@ -32,7 +32,8 @@ export default function ChatPage() {
   const [loadingHistory, setLoadingHistory] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const socketRef = useRef<ReturnType<typeof io> | null>(null);
-  // Fetch all users for dropdown
+
+  // Fetch all users for dropdown and handle URL parameter
   useEffect(() => {
     fetch("/api/user/all")
       .then((res) => res.json())
@@ -45,6 +46,13 @@ export default function ChatPage() {
             nameMap[user._id] = user.name;
           });
           setUserNames(nameMap);
+
+          // Check for 'with' URL parameter to pre-select recipient
+          const urlParams = new URLSearchParams(window.location.search);
+          const withUserId = urlParams.get("with");
+          if (withUserId && data.some((user: any) => user._id === withUserId)) {
+            setRecipient(withUserId);
+          }
         }
       });
   }, []);

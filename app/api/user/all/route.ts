@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
+import Message from "@/models/Message";
 import { getServerSession } from "next-auth";
 
 // GET /api/user/all
@@ -17,8 +18,40 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  // Find all users except current user
-  const users = await User.find({ _id: { $ne: me._id } })
+  // Get friends from user's friends array
+  const friendIds = me.friends || [];
+
+  // Find users who have sent or received messages from the current user
+  const messages = await Message.find({
+    $or: [{ sender: me._id }, { recipient: me._id }],
+  })
+    .select("sender recipient")
+    .lean();
+
+  // Extract unique user IDs from messages (excluding current user)
+  const messageUserIds = new Set<string>();
+  messages.forEach((msg: any) => {
+    const senderId = msg.sender.toString();
+    const recipientId = msg.recipient.toString();
+
+    if (senderId !== me._id.toString()) {
+      messageUserIds.add(senderId);
+    }
+    if (recipientId !== me._id.toString()) {
+      messageUserIds.add(recipientId);
+    }
+  });
+
+  // Combine friends and users with message history
+  const relevantUserIds = new Set([
+    ...friendIds,
+    ...Array.from(messageUserIds),
+  ]);
+
+  // Find users who are either friends or have message history
+  const users = await User.find({
+    _id: { $in: Array.from(relevantUserIds) },
+  })
     .select("_id name image email")
     .lean();
 

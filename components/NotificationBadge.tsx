@@ -13,7 +13,7 @@ export function NotificationBadge({ className = "" }: NotificationBadgeProps) {
 
   return (
     <span
-      className={`inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full ${className}`}
+      className={`inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-secondary-dark rounded-full ${className}`}
     >
       {unreadCount > 99 ? "99+" : unreadCount}
     </span>
@@ -31,7 +31,7 @@ export function NotificationDot({ className = "" }: NotificationDotProps) {
 
   return (
     <span
-      className={`absolute top-0 right-0 block h-2 w-2 bg-red-600 rounded-full ${className}`}
+      className={`absolute block h-2 w-2 bg-secondary-dark rounded-full ${className}`}
     />
   );
 }

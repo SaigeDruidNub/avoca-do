@@ -47,7 +47,7 @@ export function NotificationPanel() {
           />
         </svg>
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 block h-3 w-3 bg-red-600 rounded-full" />
+          <span className="absolute -top-1 -right-1 block h-3 w-3 bg-secondary-dark rounded-full" />
         )}
       </button>
 
