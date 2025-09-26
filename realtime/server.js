@@ -146,6 +146,15 @@ function startSocketServer() {
         if (recipientCount > 0) {
           console.log(`✅ Recipient is online, sending message`);
           io.to(recipient).emit("message", msg);
+          
+          // Also emit a notification event for badges/alerts
+          io.to(recipient).emit("notification", {
+            type: "new_message",
+            senderId: sender,
+            senderName: senderName,
+            message: content,
+            timestamp: messageDoc.createdAt.toISOString(),
+          });
         } else {
           console.log(`⚠️ Recipient is offline, message saved but not delivered`);
         }

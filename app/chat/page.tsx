@@ -2,6 +2,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import io, { Socket } from "socket.io-client";
+import { useNotifications } from "../../components/NotificationProvider";
+import { NotificationBadge } from "../../components/NotificationBadge";
 
 const SOCKET_URL =
   process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:4000";
@@ -17,6 +19,7 @@ interface Message {
 
 export default function ChatPage() {
   const { data: session } = useSession();
+  const { markAsRead, unreadBySender, refreshUnreadCount } = useNotifications();
   const [recipient, setRecipient] = useState("");
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -102,6 +105,10 @@ export default function ChatPage() {
           const history = await response.json();
           console.log("Loaded message history:", history);
           setMessages(history);
+
+          // Mark all messages from this sender as read
+          await markAsRead(recipient);
+          await refreshUnreadCount();
         } else {
           console.error("Failed to load message history");
           setMessages([]);
@@ -182,11 +189,15 @@ export default function ChatPage() {
           className="bg-primary-dark text-secondary border rounded px-2 py-1"
         >
           <option value="">Select Recipient</option>
-          {allUsers.map((user) => (
-            <option key={user._id} value={user._id}>
-              {user.name}
-            </option>
-          ))}
+          {allUsers.map((user) => {
+            const unreadCount =
+              unreadBySender.find((u) => u.senderId === user._id)?.count || 0;
+            return (
+              <option key={user._id} value={user._id}>
+                {user.name} {unreadCount > 0 ? `(${unreadCount} unread)` : ""}
+              </option>
+            );
+          })}
         </select>
         <input
           type="text"

@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useTranslation } from "../../components/LanguageProvider";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
+import { NotificationDot } from "../../components/NotificationBadge";
+import { NotificationPanel } from "../../components/NotificationPanel";
 
 export default function DashboardPage() {
   const { t } = useTranslation();
@@ -311,10 +313,12 @@ export default function DashboardPage() {
           <LanguageSwitcher />
           <Link
             href="/chat"
-            className="text-sm font-medium text-foreground hover:underline"
+            className="text-sm font-medium text-foreground hover:underline relative"
           >
             {t("dashboard.connectWithOtherHalves")}
+            <NotificationDot className="top-1 right-1" />
           </Link>
+          <NotificationPanel />
           <Link
             href="/settings"
             className="text-sm font-medium text-foreground hover:underline"
