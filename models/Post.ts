@@ -8,6 +8,20 @@ const PostSchema = new Schema(
     message: { type: String, required: true },
     imageUrl: { type: String },
     createdAt: { type: Date, default: Date.now },
+    likes: { type: [String], default: [] }, // array of userIds/emails who liked
+    dislikes: { type: [String], default: [] }, // array of userIds/emails who disliked
+    comments: {
+      type: [
+        {
+          _id: { type: String, required: true },
+          userId: { type: String, required: true },
+          userName: { type: String },
+          message: { type: String, required: true },
+          createdAt: { type: String },
+        },
+      ],
+      default: [],
+    },
   },
   { timestamps: true }
 );

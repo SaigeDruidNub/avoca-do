@@ -1,3 +1,4 @@
+// Use email as unique user identifier for likes/dislikes
 "use client";
 import React, { useState, useEffect as useReactEffect } from "react";
 import Link from "next/link";
@@ -56,8 +57,24 @@ export default function DashboardPage() {
     message?: string;
     imageUrl?: string;
     createdAt?: string;
+    likes?: string[]; // array of userIds who liked
+    dislikes?: string[]; // array of userIds who disliked
+    comments?: Comment[];
+  };
+  type Comment = {
+    _id: string;
+    userId: string;
+    userName?: string;
+    message: string;
+    createdAt?: string;
   };
   const [posts, setPosts] = useState<Post[]>([]);
+  const [likeLoading, setLikeLoading] = useState<string | null>(null);
+  const [dislikeLoading, setDislikeLoading] = useState<string | null>(null);
+  const [commentInputs, setCommentInputs] = useState<Record<string, string>>(
+    {}
+  );
+  const [commentLoading, setCommentLoading] = useState<string | null>(null);
   const [loadingPosts, setLoadingPosts] = useState(false);
   const [posting, setPosting] = useState(false);
   const [postError, setPostError] = useState<string | null>(null);
@@ -314,6 +331,11 @@ export default function DashboardPage() {
 
   return (
     <main className="flex min-h-screen flex-col bg-primary">
+      {/* Declare userId once for all post interactions */}
+      {(() => {
+        var userId = session?.user?.email || "";
+        return null;
+      })()}
       {/* Header with logo and user image */}
       <header className="w-full flex flex-col md:flex-row justify-between items-center p-4 bg-primary shadow-sm">
         <div className="flex items-center">
@@ -591,77 +613,230 @@ export default function DashboardPage() {
           {/* ...removed Other Halves' Feed section (now merged with main feed)... */}
 
           {/* Media Feed List */}
-          <div className="flex flex-col gap-4">
-            {loadingPosts ? (
-              <div className="text-primary-dark">
-                {t("dashboard.loadingFeed")}
-              </div>
-            ) : posts.length === 0 ? (
-              <div className="text-primary-dark">{t("dashboard.noPosts")}</div>
-            ) : (
-              posts.map((post) => {
-                const user = userMap?.[post.userId];
-                return (
-                  <div
-                    key={post._id}
-                    className="bg-primary-dark rounded-lg shadow p-4 flex gap-4 items-start"
-                  >
-                    <img
-                      src={user?.image || post.userImage || "/logo.png"}
-                      alt={user?.name || post.userName || "User"}
-                      className="w-12 h-12 rounded-full border border-gray-300"
-                    />
-                    <div>
-                      <div className="font-bold text-secondary-dark">
-                        {user?.name || post.userName || t("dashboard.user")}
-                      </div>
-                      <div className="text-primary mb-2">{post.message}</div>
-                      {post.imageUrl && (
+          {/* Declare userId once for all post interactions */}
+          {(() => {
+            const userId = session?.user?.email || "";
+            return (
+              <div className="flex flex-col gap-4">
+                {loadingPosts ? (
+                  <div className="text-primary-dark">
+                    {t("dashboard.loadingFeed")}
+                  </div>
+                ) : posts.length === 0 ? (
+                  <div className="text-primary-dark">
+                    {t("dashboard.noPosts")}
+                  </div>
+                ) : (
+                  posts.map((post) => {
+                    const user = userMap?.[post.userId];
+                    // Like/dislike helpers
+                    const liked = post.likes?.includes(userId);
+                    const disliked = post.dislikes?.includes(userId);
+                    const likeCount = post.likes?.length || 0;
+                    const dislikeCount = post.dislikes?.length || 0;
+
+                    const handleLike = async (postId: string) => {
+                      setLikeLoading(postId);
+                      try {
+                        await fetch(`/api/feed/like`, {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ postId }),
+                        });
+                        fetchPosts();
+                      } finally {
+                        setLikeLoading(null);
+                      }
+                    };
+                    const handleDislike = async (postId: string) => {
+                      setDislikeLoading(postId);
+                      try {
+                        await fetch(`/api/feed/dislike`, {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ postId }),
+                        });
+                        fetchPosts();
+                      } finally {
+                        setDislikeLoading(null);
+                      }
+                    };
+                    const handleCommentSubmit = async (
+                      e: React.FormEvent,
+                      postId: string
+                    ) => {
+                      e.preventDefault();
+                      setCommentLoading(postId);
+                      try {
+                        await fetch(`/api/feed/comment`, {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            postId,
+                            message: commentInputs[postId],
+                          }),
+                        });
+                        setCommentInputs((prev) => ({ ...prev, [postId]: "" }));
+                        fetchPosts();
+                      } finally {
+                        setCommentLoading(null);
+                      }
+                    };
+
+                    return (
+                      <div
+                        key={post._id}
+                        className="bg-primary-dark rounded-lg shadow p-4 flex gap-4 items-start"
+                      >
                         <img
-                          src={post.imageUrl}
-                          alt="Post image"
-                          className="max-w-xs max-h-60 rounded-lg border mt-2 object-contain cursor-pointer hover:opacity-80 transition"
-                          style={{ width: "100%", height: "auto" }}
-                          onClick={() => setModalImage(post.imageUrl ?? null)}
+                          src={user?.image || post.userImage || "/logo.png"}
+                          alt={user?.name || post.userName || "User"}
+                          className="w-12 h-12 rounded-full border border-gray-300"
                         />
-                      )}
-                      {/* Image Modal */}
-                      {modalImage && (
-                        <div
-                          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70"
-                          onClick={() => setModalImage(null)}
-                        >
-                          <div
-                            className="relative max-w-3xl w-full flex flex-col items-center"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <button
-                              className="absolute top-2 right-2 text-white text-2xl bg-black bg-opacity-50 rounded-full px-3 py-1 hover:bg-opacity-80"
-                              onClick={() => setModalImage(null)}
-                              aria-label="Close"
-                            >
-                              &times;
-                            </button>
+                        <div className="w-full">
+                          <div className="font-bold text-secondary-dark">
+                            {user?.name || post.userName || t("dashboard.user")}
+                          </div>
+                          <div className="text-primary mb-2">
+                            {post.message}
+                          </div>
+                          {post.imageUrl && (
                             <img
-                              src={modalImage}
-                              alt="Full size post image"
-                              className="rounded-lg border max-h-[80vh] max-w-full shadow-lg"
-                              style={{ objectFit: "contain" }}
+                              src={post.imageUrl}
+                              alt="Post image"
+                              className="max-w-xs max-h-60 rounded-lg border mt-2 object-contain cursor-pointer hover:opacity-80 transition"
+                              style={{ width: "100%", height: "auto" }}
+                              onClick={() =>
+                                setModalImage(post.imageUrl ?? null)
+                              }
                             />
+                          )}
+                          {/* Like/Dislike Buttons */}
+                          <div className="flex items-center gap-4 mt-2">
+                            <button
+                              className={`px-3 py-1 rounded text-sm font-medium ${
+                                liked
+                                  ? "bg-green-500 text-white"
+                                  : "bg-gray-200 text-primary"
+                              }`}
+                              disabled={likeLoading === post._id}
+                              onClick={() => handleLike(post._id)}
+                            >
+                              👍 {likeCount}
+                            </button>
+                            <button
+                              className={`px-3 py-1 rounded text-sm font-medium ${
+                                disliked
+                                  ? "bg-red-500 text-white"
+                                  : "bg-gray-200 text-primary"
+                              }`}
+                              disabled={dislikeLoading === post._id}
+                              onClick={() => handleDislike(post._id)}
+                            >
+                              👎 {dislikeCount}
+                            </button>
+                          </div>
+                          {/* Comments Section */}
+                          <div className="mt-4">
+                            <div className="font-semibold text-primary mb-2">
+                              Comments
+                            </div>
+                            <ul className="space-y-2 mb-2">
+                              {post.comments && post.comments.length > 0 ? (
+                                post.comments.map((comment) => (
+                                  <li
+                                    key={comment._id}
+                                    className="text-sm bg-primary-dark rounded p-2 border border-primary"
+                                  >
+                                    <span className="font-bold text-secondary-dark">
+                                      {comment.userName || comment.userId}:
+                                    </span>{" "}
+                                    <span className="text-primary">
+                                      {comment.message}
+                                    </span>
+                                    <span className="text-xs text-gray-500 ml-2">
+                                      {comment.createdAt
+                                        ? new Date(
+                                            comment.createdAt
+                                          ).toLocaleString()
+                                        : ""}
+                                    </span>
+                                  </li>
+                                ))
+                              ) : (
+                                <li className="text-sm text-gray-400">
+                                  No comments yet.
+                                </li>
+                              )}
+                            </ul>
+                            <form
+                              className="flex gap-2"
+                              onSubmit={(e) => handleCommentSubmit(e, post._id)}
+                            >
+                              <input
+                                type="text"
+                                className="border border-gray-300 rounded px-2 py-1 text-sm flex-1"
+                                placeholder="Add a comment..."
+                                value={commentInputs[post._id] || ""}
+                                onChange={(e) =>
+                                  setCommentInputs((prev) => ({
+                                    ...prev,
+                                    [post._id]: e.target.value,
+                                  }))
+                                }
+                                disabled={commentLoading === post._id}
+                                required
+                              />
+                              <button
+                                type="submit"
+                                className="bg-primary text-white rounded px-3 py-1 text-sm font-medium hover:bg-primary-dark disabled:opacity-60"
+                                disabled={commentLoading === post._id}
+                              >
+                                {commentLoading === post._id
+                                  ? "Posting..."
+                                  : "Post"}
+                              </button>
+                            </form>
+                          </div>
+                          {/* Image Modal */}
+                          {modalImage && (
+                            <div
+                              className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70"
+                              onClick={() => setModalImage(null)}
+                            >
+                              <div
+                                className="relative max-w-3xl w-full flex flex-col items-center"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <button
+                                  className="absolute top-2 right-2 text-white text-2xl bg-black bg-opacity-50 rounded-full px-3 py-1 hover:bg-opacity-80"
+                                  onClick={() => setModalImage(null)}
+                                  aria-label="Close"
+                                >
+                                  &times;
+                                </button>
+                                <img
+                                  src={modalImage}
+                                  alt="Full size post image"
+                                  className="rounded-lg border max-h-[80vh] max-w-full shadow-lg"
+                                  style={{ objectFit: "contain" }}
+                                />
+                              </div>
+                            </div>
+                          )}
+                          <div className="text-xs text-primary mt-1">
+                            {post.createdAt
+                              ? new Date(post.createdAt).toLocaleString()
+                              : ""}
                           </div>
                         </div>
-                      )}
-                      <div className="text-xs text-primary mt-1">
-                        {post.createdAt
-                          ? new Date(post.createdAt).toLocaleString()
-                          : ""}
                       </div>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
+                    );
+                  })
+                )}
+              </div>
+            );
+          })()}
         </section>
       </section>
     </main>
