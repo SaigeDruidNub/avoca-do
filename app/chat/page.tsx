@@ -133,9 +133,12 @@ export default function ChatPage() {
   }, [recipient, userId]);
 
   // Scroll to bottom on new message
+  // Scroll to bottom on new message or after loading history
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (!loadingHistory) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, loadingHistory]);
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -174,6 +177,8 @@ export default function ChatPage() {
     }
     socketRef.current.emit("message", payload);
     setMessage("");
+    // Refresh the page to update notifications
+    window.location.reload();
   };
 
   return (

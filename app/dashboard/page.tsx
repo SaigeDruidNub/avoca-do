@@ -9,6 +9,10 @@ import LanguageSwitcher from "../../components/LanguageSwitcher";
 import { NotificationDot } from "../../components/NotificationBadge";
 
 export default function DashboardPage() {
+  // Notifications
+  const { refreshUnreadCount } =
+    require("../../components/NotificationProvider").useNotifications();
+
   const { t } = useTranslation();
 
   // Helper function to generate RoboHash cat avatar
@@ -133,9 +137,18 @@ export default function DashboardPage() {
     }
   };
 
-  // Fetch posts on mount
+  // Fetch posts and refresh notifications on mount
   useEffect(() => {
     fetchPosts();
+    refreshUnreadCount();
+    // Refresh notifications when window regains focus
+    const handleFocus = () => {
+      refreshUnreadCount();
+    };
+    window.addEventListener("focus", handleFocus);
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+    };
   }, []);
 
   // Radius state (in miles)
@@ -302,7 +315,7 @@ export default function DashboardPage() {
   return (
     <main className="flex min-h-screen flex-col bg-primary">
       {/* Header with logo and user image */}
-      <header className="w-full flex justify-between items-center p-4 bg-primary shadow-sm">
+      <header className="w-full flex flex-col md:flex-row justify-between items-center p-4 bg-primary shadow-sm">
         <div className="flex items-center">
           <Link href="/dashboard">
             <img src="/logo.png" alt="Logo" className="h-20 w-auto" />
@@ -332,17 +345,17 @@ export default function DashboardPage() {
                   className="w-10 h-10 rounded-full border border-gray-300 shadow group-hover:opacity-80 transition"
                 />
               )}
-              <span className="text-primary font-medium text-base group-hover:underline">
+              <span className="text-foreground font-medium text-base group-hover:underline">
                 {session.user.name || t("dashboard.profile")}
               </span>
             </Link>
           )}
         </div>
       </header>
-      {/* Two-column dashboard layout */}
-      <section className="flex flex-1 flex-row w-full max-w-7xl mx-auto p-8 gap-8">
+      {/* Responsive dashboard layout */}
+      <section className="flex flex-1 flex-col md:flex-row w-full max-w-7xl mx-auto p-2 md:p-8 gap-4 md:gap-8">
         {/* Left sidebar: Location, Other Halves and Suggested Other Halves */}
-        <aside className="w-full md:w-1/3 flex flex-col gap-8">
+        <aside className="w-full md:w-1/3 flex flex-col gap-4 md:gap-8">
           {/* Location and search radius at the top */}
           <div className="bg-primary-dark rounded-lg shadow p-6 mb-2">
             <div className="mb-2 flex items-center gap-2">
@@ -538,7 +551,7 @@ export default function DashboardPage() {
           </div>
         </aside>
         {/* Right column: Media Feed */}
-        <section className="flex-1 flex flex-col gap-6">
+        <section className="flex-1 flex flex-col gap-4 md:gap-6">
           {/* Welcome */}
           <h1 className="text-4xl font-bold mb-2">{t("dashboard.title")}</h1>
 
@@ -599,7 +612,7 @@ export default function DashboardPage() {
                       className="w-12 h-12 rounded-full border border-gray-300"
                     />
                     <div>
-                      <div className="font-bold text-secondary">
+                      <div className="font-bold text-secondary-dark">
                         {user?.name || post.userName || t("dashboard.user")}
                       </div>
                       <div className="text-primary mb-2">{post.message}</div>

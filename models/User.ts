@@ -1,5 +1,10 @@
 import mongoose, { Schema, models, model } from "mongoose";
 
+// Clear the existing model if it exists (for development)
+if (models.User) {
+  delete models.User;
+}
+
 const UserSchema = new Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
@@ -10,6 +15,15 @@ const UserSchema = new Schema({
   school: { type: String, default: "" },
   about: { type: String, default: "" },
   interests: { type: [String], default: [] },
+  customInterests: {
+    type: [
+      {
+        category: { type: String, required: false },
+        customInterest: { type: String, required: false },
+      },
+    ],
+    default: [],
+  },
   friends: { type: [String], default: [] }, // Array of user IDs (as strings)
   otherHalf: { type: String, default: "" }, // Email of user's real other half
   locationShared: { type: Boolean, default: false }, // Whether user has shared their location
@@ -26,6 +40,7 @@ const UserSchema = new Schema({
     state: { type: String },
   },
   createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
 });
 
 UserSchema.index({ location: "2dsphere" });

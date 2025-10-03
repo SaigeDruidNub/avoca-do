@@ -1,19 +1,9 @@
 @import "tailwindcss";
 
 
+
+
 :root {
-  --background: #f6f5d6; /* DMC 10 - Very Light Tender Green */
-  --foreground: #171717;
-  --primary: #bfc85a;     /* DMC 471 - Very Light Avocado Green */
-  --primary-dark: #39513a; /* DMC 3345 - Dark Hunter Green */
-  --accent: #a07a4b;      /* DMC 610 - Dark Drab Brown */
-  --secondary: #a36a8c;   /* DMC 3835 - Medium Grape */
-  --secondary-dark: #3d1937; /* DMC 154 - Very Dark Grape */
-}
-
-
-@media (prefers-color-scheme: dark) {
-  :root {
     --background: #0a0a0a;
     --foreground: #ededed;
     --primary: #39513a;        /* DMC 3345 - Dark Hunter Green */
@@ -22,7 +12,7 @@
     --secondary: #3d1937;      /* DMC 154 - Very Dark Grape */
     --secondary-dark: #a36a8c; /* DMC 3835 - Medium Grape */
   }
-}
+
 
 body {
   background: var(--background);
