@@ -13,6 +13,8 @@ import EmojiPicker from "../../components/EmojiPicker";
 import GifPicker from "../../components/GifPicker";
 
 export default function DashboardPage() {
+  // Mobile menu state
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   // Notifications
   const { refreshUnreadCount } =
     require("../../components/NotificationProvider").useNotifications();
@@ -56,6 +58,15 @@ export default function DashboardPage() {
   // (already declared, remove duplicate)
   // Current user profile (for interests)
   const [userProfile, setUserProfile] = useState<{
+    _id?: string;
+    name?: string;
+    email?: string;
+    image?: string;
+    pronouns?: string;
+    maritalStatus?: string;
+    job?: string;
+    school?: string;
+    about?: string;
     interests: string[];
   } | null>(null);
 
@@ -400,12 +411,26 @@ export default function DashboardPage() {
       })()}
       {/* Header with logo and user image */}
       <header className="w-full flex flex-col md:flex-row justify-between items-center p-4 bg-primary shadow-sm">
-        <div className="flex items-center">
+        <div className="flex items-center w-full md:w-auto justify-between">
           <Link href="/dashboard">
-            <img src="/logo.png" alt="Logo" className="h-20 w-auto" />
+            <img src="/logo.png" alt="Logo" className="h-16 w-auto" />
           </Link>
+          {/* Hamburger menu for mobile */}
+          <button
+            className="md:hidden ml-2 p-2 rounded focus:outline-none border border-gray-300 bg-primary-dark text-secondary"
+            onClick={() => setShowMobileMenu((prev) => !prev)}
+            aria-label="Open menu"
+          >
+            {/* Menu icon (three horizontal bars) */}
+            <svg width="32" height="32" fill="currentColor" viewBox="0 0 20 20">
+              <rect y="5" width="20" height="2" rx="1" fill="currentColor" />
+              <rect y="10" width="20" height="2" rx="1" fill="currentColor" />
+              <rect y="15" width="20" height="2" rx="1" fill="currentColor" />
+            </svg>
+          </button>
         </div>
-        <div className="flex items-center gap-4">
+        {/* Desktop menu */}
+        <div className="hidden md:flex items-center gap-4">
           <LanguageSwitcher />
           <Link
             href="/chat"
@@ -420,21 +445,60 @@ export default function DashboardPage() {
           >
             {t("dashboard.settings")}
           </Link>
-          {session?.user && (
+          {userProfile && (
             <Link href="/profile" className="flex items-center gap-2 group">
-              {session.user.image && (
-                <img
-                  src={session.user.image}
-                  alt="User avatar"
-                  className="w-10 h-10 rounded-full border border-gray-300 shadow group-hover:opacity-80 transition"
-                />
-              )}
+              <img
+                src={userProfile.image || "/logo.png"}
+                alt="User avatar"
+                className="w-10 h-10 rounded-full border border-gray-300 shadow group-hover:opacity-80 transition"
+                onError={(e) => {
+                  e.currentTarget.src = "/logo.png";
+                }}
+                referrerPolicy="no-referrer"
+                crossOrigin="anonymous"
+              />
               <span className="text-foreground font-medium text-base group-hover:underline">
-                {session.user.name || t("dashboard.profile")}
+                {userProfile.name || t("dashboard.profile")}
               </span>
             </Link>
           )}
         </div>
+        {/* Mobile dropdown menu */}
+        {showMobileMenu && (
+          <div className="flex flex-col gap-2 mt-4 md:hidden w-full">
+            <LanguageSwitcher />
+            <Link
+              href="/chat"
+              className="text-sm font-medium text-foreground hover:underline relative"
+            >
+              {t("dashboard.connectWithOtherHalves")}
+              <NotificationDot className="-top-1 -right-1" />
+            </Link>
+            <Link
+              href="/settings"
+              className="text-sm font-medium text-foreground hover:underline"
+            >
+              {t("dashboard.settings")}
+            </Link>
+            {userProfile && (
+              <Link href="/profile" className="flex items-center gap-2 group">
+                <img
+                  src={userProfile.image || "/logo.png"}
+                  alt="User avatar"
+                  className="w-10 h-10 rounded-full border border-gray-300 shadow group-hover:opacity-80 transition"
+                  onError={(e) => {
+                    e.currentTarget.src = "/logo.png";
+                  }}
+                  referrerPolicy="no-referrer"
+                  crossOrigin="anonymous"
+                />
+                <span className="text-foreground font-medium text-base group-hover:underline">
+                  {userProfile.name || t("dashboard.profile")}
+                </span>
+              </Link>
+            )}
+          </div>
+        )}
       </header>
       {/* Responsive dashboard layout */}
       <section className="flex flex-1 flex-col md:flex-row w-full max-w-7xl mx-auto p-2 md:p-8 gap-4 md:gap-8">
@@ -475,7 +539,7 @@ export default function DashboardPage() {
                     <img
                       src={friend.image || getRoboHashAvatar(friend._id)}
                       alt={friend.name || "Other Half"}
-                      className="w-12 h-12 rounded-full border border-gray-300"
+                      className="w-12 h-12 rounded-full border border-gray-300 object-cover"
                       onError={(e) => {
                         console.log(
                           `Failed to load friend image for ${friend.name}:`,
@@ -848,12 +912,23 @@ export default function DashboardPage() {
                 const handleLike = async (postId: string) => {
                   setLikeLoading(postId);
                   try {
-                    await fetch(`/api/feed/like`, {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ postId }),
-                    });
-                    fetchPosts();
+                    let res;
+                    if (liked) {
+                      res = await fetch(`/api/feed/unlike`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ postId }),
+                      });
+                    } else {
+                      res = await fetch(`/api/feed/like`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ postId }),
+                      });
+                    }
+                    if (res.ok) {
+                      fetchPosts();
+                    }
                   } finally {
                     setLikeLoading(null);
                   }
@@ -861,12 +936,23 @@ export default function DashboardPage() {
                 const handleDislike = async (postId: string) => {
                   setDislikeLoading(postId);
                   try {
-                    await fetch(`/api/feed/dislike`, {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ postId }),
-                    });
-                    fetchPosts();
+                    let res;
+                    if (disliked) {
+                      res = await fetch(`/api/feed/undislike`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ postId }),
+                      });
+                    } else {
+                      res = await fetch(`/api/feed/dislike`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ postId }),
+                      });
+                    }
+                    if (res.ok) {
+                      fetchPosts();
+                    }
                   } finally {
                     setDislikeLoading(null);
                   }
@@ -905,207 +991,224 @@ export default function DashboardPage() {
                 return (
                   <div
                     key={post._id}
-                    className="bg-primary-dark rounded-lg shadow p-4 flex gap-4 items-start"
+                    className="bg-primary-dark rounded-lg shadow p-4 flex flex-col w-full gap-2"
                   >
                     <img
-                      src={user?.image || post.userImage || "/logo.png"}
+                      src={
+                        user?.image && user?.image.trim() !== ""
+                          ? user.image
+                          : post.userImage && post.userImage.trim() !== ""
+                          ? post.userImage
+                          : getRoboHashAvatar(post.userId)
+                      }
                       alt={user?.name || post.userName || "User"}
-                      className="w-12 h-12 rounded-full border border-gray-300"
+                      className="w-12 h-12 rounded-full border border-gray-300 object-cover mb-2"
+                      onError={(e) => {
+                        e.currentTarget.src = getRoboHashAvatar(post.userId);
+                      }}
                     />
                     <div className="w-full">
-                      <div className="font-bold text-secondary-dark">
+                      <div className="font-bold text-secondary-dark break-words w-full">
                         {user?.name || post.userName || t("dashboard.user")}
                       </div>
-                      <div className="text-primary mb-2">{post.message}</div>
-                      {/* Render GIF if present in post */}
-                      {post.gifUrl && post.gifUrl.length > 0 && (
-                        <img
-                          src={post.gifUrl}
-                          alt="GIF"
-                          className="max-w-xs max-h-60 rounded-lg border mt-2 object-contain cursor-pointer hover:opacity-80 transition"
-                          style={{ width: "100%", height: "auto" }}
-                          onClick={() => setModalImage(post.gifUrl ?? null)}
-                        />
-                      )}
-                      {post.imageUrl && (
-                        <img
-                          src={post.imageUrl}
-                          alt="Post image"
-                          className="max-w-xs max-h-60 rounded-lg border mt-2 object-contain cursor-pointer hover:opacity-80 transition"
-                          style={{ width: "100%", height: "auto" }}
-                          onClick={() => setModalImage(post.imageUrl ?? null)}
-                        />
-                      )}
-                      {/* Like/Dislike Buttons */}
-                      <div className="flex items-center gap-4 mt-2">
-                        <button
-                          className={`px-3 py-1 rounded text-sm font-medium flex items-center gap-2 ${
-                            liked
-                              ? "bg-primary text-white"
-                              : "bg-gray-200 text-primary"
-                          }`}
-                          disabled={likeLoading === post._id}
-                          onClick={() => handleLike(post._id)}
-                        >
-                          <FaThumbsUp className="inline-block" /> {likeCount}
-                        </button>
-                        <button
-                          className={`px-3 py-1 rounded text-sm font-medium flex items-center gap-2 ${
-                            disliked
-                              ? "bg-secondary-dark text-white"
-                              : "bg-gray-200 text-primary"
-                          }`}
-                          disabled={dislikeLoading === post._id}
-                          onClick={() => handleDislike(post._id)}
-                        >
-                          <FaThumbsDown className="inline-block" />{" "}
-                          {dislikeCount}
-                        </button>
-                      </div>
-                      {/* Comments Section */}
-                      <div className="mt-4">
-                        <div className="font-semibold text-primary mb-2">
-                          Comments
+                      <div className="text-primary mb-2 break-words">
+                        <div className="text-primary mb-2 break-words w-full">
+                          {post.message}
                         </div>
-                        <ul className="space-y-2 mb-2">
-                          {post.comments && post.comments.length > 0 ? (
-                            post.comments.map((comment) => (
-                              <li
-                                key={comment._id}
-                                className="text-sm bg-primary-dark rounded p-2 border border-primary"
-                              >
-                                <span className="font-bold text-secondary-dark">
-                                  {comment.userName || comment.userId}:
-                                </span>{" "}
-                                <span className="text-primary">
-                                  {comment.message}
-                                </span>
-                                {comment.gifUrl &&
-                                  comment.gifUrl.length > 0 && (
-                                    <img
-                                      src={comment.gifUrl}
-                                      alt="GIF"
-                                      className="max-w-xs max-h-32 rounded border mt-2"
-                                    />
-                                  )}
-                                <span className="text-xs text-gray-500 ml-2">
-                                  {comment.createdAt
-                                    ? new Date(
-                                        comment.createdAt
-                                      ).toLocaleString()
-                                    : ""}
-                                </span>
-                              </li>
-                            ))
-                          ) : (
-                            <li className="text-sm text-primary">
-                              No comments yet.
-                            </li>
-                          )}
-                        </ul>
-                        <form
-                          className="flex gap-2 items-center relative"
-                          onSubmit={(e) => handleCommentSubmit(e, post._id)}
-                        >
-                          <input
-                            type="text"
-                            className="border border-gray-300 rounded px-2 py-1 text-sm flex-1 text-secondary"
-                            placeholder="Add a comment or just a GIF..."
-                            value={commentInputs[post._id] || ""}
-                            onChange={(e) =>
-                              setCommentInputs((prev) => ({
-                                ...prev,
-                                [post._id]: e.target.value,
-                              }))
-                            }
-                            disabled={commentLoading === post._id}
+                        {/* Render GIF if present in post */}
+                        {post.gifUrl && post.gifUrl.length > 0 && (
+                          <img
+                            src={post.gifUrl}
+                            alt="GIF"
+                            className="w-full max-h-60 rounded-lg mt-2 object-contain cursor-pointer hover:opacity-80 transition"
+                            onClick={() => setModalImage(post.gifUrl ?? null)}
                           />
-                          <button
-                            type="button"
-                            className="bg-gray-200 text-primary rounded px-2 py-1 text-sm font-medium border hover:bg-gray-300"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setShowEmojiPicker((prev) => ({
-                                ...(prev || {}),
-                                [post._id]: !prev?.[post._id],
-                              }));
-                            }}
-                            style={{ minWidth: 32 }}
+                        )}
+                        {post.imageUrl && (
+                          <img
+                            src={post.imageUrl}
+                            alt="Post image"
+                            className="w-full max-h-60 rounded-lg mt-2 object-contain cursor-pointer hover:opacity-80 transition"
+                            onClick={() => setModalImage(post.imageUrl ?? null)}
+                          />
+                        )}
+                        {/* Like/Dislike Buttons */}
+                        <div className="flex items-center gap-4 mt-2">
+                          <div className="flex flex-row flex-wrap w-full gap-2 mb-2">
+                            <button
+                              className={`px-3 py-1 rounded text-sm font-medium flex items-center gap-2 ${
+                                liked
+                                  ? "bg-primary text-white"
+                                  : "bg-gray-200 text-primary"
+                              }`}
+                              disabled={likeLoading === post._id}
+                              onClick={() => handleLike(post._id)}
+                            >
+                              <FaThumbsUp className="inline-block" />{" "}
+                              {likeCount}
+                            </button>
+                            <button
+                              className={`px-3 py-1 rounded text-sm font-medium flex items-center gap-2 ${
+                                disliked
+                                  ? "bg-secondary-dark text-white"
+                                  : "bg-gray-200 text-primary"
+                              }`}
+                              disabled={dislikeLoading === post._id}
+                              onClick={() => handleDislike(post._id)}
+                            >
+                              <FaThumbsDown className="inline-block" />{" "}
+                              {dislikeCount}
+                            </button>
+                          </div>
+                        </div>
+                        {/* Comments Section */}
+                        <div className="mt-4">
+                          <div className="font-semibold text-primary mb-2">
+                            Comments
+                          </div>
+                          <ul className="space-y-2 mb-2 w-full">
+                            {post.comments && post.comments.length > 0 ? (
+                              post.comments.map((comment) => (
+                                <li
+                                  key={comment._id}
+                                  className="text-sm bg-primary-dark rounded p-2 border border-primary w-full break-words"
+                                >
+                                  <span className="font-bold text-secondary-dark">
+                                    {comment.userName || comment.userId}:
+                                  </span>{" "}
+                                  <span className="text-primary">
+                                    {comment.message}
+                                  </span>
+                                  {comment.gifUrl &&
+                                    comment.gifUrl.length > 0 && (
+                                      <img
+                                        src={comment.gifUrl}
+                                        alt="GIF"
+                                        className="w-full max-w-xs max-h-32 rounded border mt-2 object-cover"
+                                      />
+                                    )}
+                                  <span className="text-xs text-gray-500 ml-2">
+                                    {comment.createdAt
+                                      ? new Date(
+                                          comment.createdAt
+                                        ).toLocaleString()
+                                      : ""}
+                                  </span>
+                                </li>
+                              ))
+                            ) : (
+                              <li className="text-sm text-primary w-full">
+                                No comments yet.
+                              </li>
+                            )}
+                          </ul>
+                          <form
+                            className="flex flex-col gap-2 items-center relative"
+                            onSubmit={(e) => handleCommentSubmit(e, post._id)}
                           >
-                            😊
-                          </button>
-                          <button
-                            type="button"
-                            className="bg-gray-200 text-primary rounded px-2 py-1 text-sm font-medium border hover:bg-gray-300"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setShowGifPicker((prev) => ({
-                                ...prev,
-                                [post._id]: !prev[post._id],
-                              }));
-                            }}
-                            style={{ minWidth: 32 }}
-                          >
-                            GIF
-                          </button>
-                          {commentGifUrls[post._id] && (
-                            <img
-                              src={commentGifUrls[post._id]}
-                              alt="GIF preview"
-                              className="max-w-xs max-h-20 rounded border ml-2"
+                            <input
+                              type="text"
+                              className="border border-gray-300 rounded px-2 py-1 text-sm w-full text-secondary"
+                              placeholder="Add a comment or just a GIF..."
+                              value={commentInputs[post._id] || ""}
+                              onChange={(e) =>
+                                setCommentInputs((prev) => ({
+                                  ...prev,
+                                  [post._id]: e.target.value,
+                                }))
+                              }
+                              disabled={commentLoading === post._id}
                             />
-                          )}
-                          {showEmojiPicker?.[post._id] && (
-                            <div className="absolute z-50 top-full left-0 mt-2">
-                              <EmojiPicker
-                                onSelect={(emoji) => {
-                                  setCommentInputs((prev) => ({
-                                    ...prev,
-                                    [post._id]: (prev[post._id] || "") + emoji,
-                                  }));
+                            <div className="flex flex-row flex-wrap w-full gap-2 mt-2">
+                              <button
+                                type="button"
+                                className="bg-gray-200 text-primary rounded px-2 py-1 text-sm font-medium border hover:bg-gray-300"
+                                onClick={(e) => {
+                                  e.preventDefault();
                                   setShowEmojiPicker((prev) => ({
-                                    ...prev,
-                                    [post._id]: false,
+                                    ...(prev || {}),
+                                    [post._id]: !prev?.[post._id],
                                   }));
                                 }}
-                              />
-                            </div>
-                          )}
-                          {showGifPicker?.[post._id] && (
-                            <div className="absolute z-50 top-full left-20 mt-2">
-                              <GifPicker
-                                onSelect={(gifUrl) => {
-                                  setCommentGifUrls((prev) => ({
-                                    ...prev,
-                                    [post._id]: gifUrl,
-                                  }));
+                                style={{ minWidth: 32 }}
+                              >
+                                😊
+                              </button>
+                              <button
+                                type="button"
+                                className="bg-gray-200 text-primary rounded px-2 py-1 text-sm font-medium border hover:bg-gray-300"
+                                onClick={(e) => {
+                                  e.preventDefault();
                                   setShowGifPicker((prev) => ({
                                     ...prev,
-                                    [post._id]: false,
+                                    [post._id]: !prev[post._id],
                                   }));
                                 }}
-                              />
+                                style={{ minWidth: 32 }}
+                              >
+                                GIF
+                              </button>
+                              {commentGifUrls[post._id] && (
+                                <img
+                                  src={commentGifUrls[post._id]}
+                                  alt="GIF preview"
+                                  className="max-w-xs max-h-20 rounded border ml-2"
+                                />
+                              )}
+                              {showEmojiPicker?.[post._id] && (
+                                <div className="absolute z-50 top-full left-0 mt-2">
+                                  <EmojiPicker
+                                    onSelect={(emoji) => {
+                                      setCommentInputs((prev) => ({
+                                        ...prev,
+                                        [post._id]:
+                                          (prev[post._id] || "") + emoji,
+                                      }));
+                                      setShowEmojiPicker((prev) => ({
+                                        ...prev,
+                                        [post._id]: false,
+                                      }));
+                                    }}
+                                  />
+                                </div>
+                              )}
+                              {showGifPicker?.[post._id] && (
+                                <div className="absolute z-50 top-full left-20 mt-2">
+                                  <GifPicker
+                                    onSelect={(gifUrl) => {
+                                      setCommentGifUrls((prev) => ({
+                                        ...prev,
+                                        [post._id]: gifUrl,
+                                      }));
+                                      setShowGifPicker((prev) => ({
+                                        ...prev,
+                                        [post._id]: false,
+                                      }));
+                                    }}
+                                  />
+                                </div>
+                              )}
+                              <button
+                                type="submit"
+                                className="bg-primary text-white rounded px-3 py-1 text-sm font-medium border hover:bg-primary-dark"
+                                disabled={
+                                  commentLoading === post._id ||
+                                  (!commentInputs[post._id] &&
+                                    !commentGifUrls[post._id])
+                                }
+                              >
+                                {commentLoading === post._id
+                                  ? "Posting..."
+                                  : "Post"}
+                              </button>
                             </div>
-                          )}
-                          <button
-                            type="submit"
-                            className="bg-primary text-white rounded px-3 py-1 text-sm font-medium border hover:bg-primary-dark"
-                            disabled={
-                              commentLoading === post._id ||
-                              (!commentInputs[post._id] &&
-                                !commentGifUrls[post._id])
-                            }
-                          >
-                            {commentLoading === post._id
-                              ? "Posting..."
-                              : "Post"}
-                          </button>
-                        </form>
-                      </div>
-                      <div className="text-xs text-primary mt-1">
-                        {post.createdAt
-                          ? new Date(post.createdAt).toLocaleString()
-                          : ""}
+                          </form>
+                        </div>
+                        <div className="text-xs text-primary mt-1">
+                          {post.createdAt
+                            ? new Date(post.createdAt).toLocaleString()
+                            : ""}
+                        </div>
                       </div>
                     </div>
                   </div>

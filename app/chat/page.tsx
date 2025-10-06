@@ -1,5 +1,7 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
+import EmojiPicker from "../../components/EmojiPicker";
+import GifPicker from "../../components/GifPicker";
 import { useSession } from "next-auth/react";
 import io, { Socket } from "socket.io-client";
 import { useNotifications } from "../../components/NotificationProvider";
@@ -23,6 +25,8 @@ export default function ChatPage() {
   const [recipient, setRecipient] = useState("");
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showGifPicker, setShowGifPicker] = useState(false);
   const [userId, setUserId] = useState<string>("");
   const [allUsers, setAllUsers] = useState<
     { _id: string; name: string; image?: string; email?: string }[]
@@ -145,19 +149,15 @@ export default function ChatPage() {
     setError("");
     if (!recipient) {
       setError("Please select a recipient.");
-      console.log("No recipient selected");
       return;
     }
     if (!message) {
       setError("Please enter a message.");
-      console.log("No message entered");
       return;
     }
-    // Get own userId
     const me = await fetch("/api/user/me").then((res) => res.json());
     if (!me || !me._id) {
       setError("Could not determine your user ID.");
-      console.log("No user ID found");
       return;
     }
     const payload = {
@@ -165,26 +165,53 @@ export default function ChatPage() {
       recipient,
       content: message,
     };
-    console.log(
-      "Attempting to send message payload:",
-      payload,
-      socketRef.current
-    );
     if (!socketRef.current) {
       setError("Socket connection not established.");
-      console.log("Socket connection not established");
       return;
     }
     socketRef.current.emit("message", payload);
     setMessage("");
-    // Refresh the page to update notifications
-    window.location.reload();
+    setShowGifPicker(false);
+    setShowEmojiPicker(false);
+    // No page reload needed; socket will update messages
+  };
+
+  // Send GIF as a message
+  const handleGifSelect = async (gifUrl: string) => {
+    setShowGifPicker(false);
+    setError("");
+    if (!recipient) {
+      setError("Please select a recipient.");
+      return;
+    }
+    const me = await fetch("/api/user/me").then((res) => res.json());
+    if (!me || !me._id) {
+      setError("Could not determine your user ID.");
+      return;
+    }
+    const payload = {
+      sender: me._id,
+      recipient,
+      content: gifUrl, // Store GIF URL as message content
+    };
+    if (!socketRef.current) {
+      setError("Socket connection not established.");
+      return;
+    }
+    socketRef.current.emit("message", payload);
+    // No page reload needed; socket will update messages
+  };
+
+  // Add emoji to message input
+  const handleEmojiSelect = (emoji: string) => {
+    setMessage((prev) => prev + emoji);
+    setShowEmojiPicker(false);
   };
 
   return (
-    <main className="flex flex-col items-center min-h-screen bg-primary p-8">
+    <main className="flex flex-col items-center min-h-screen bg-primary p-2 sm:p-4">
       {/* Header with back to dashboard link */}
-      <div className="w-full max-w-md flex justify-between items-center mb-6">
+      <div className="w-full max-w-md flex flex-col sm:flex-row justify-between items-center mb-4 gap-2">
         <a
           href="/dashboard"
           className="bg-accent text-white px-4 py-2 rounded shadow hover:bg-accent-dark transition flex items-center gap-2"
@@ -194,12 +221,15 @@ export default function ChatPage() {
         </a>
         <h1 className="text-2xl font-bold text-foreground">Chat</h1>
       </div>
-      <form className="mb-4 flex gap-2" onSubmit={sendMessage}>
+      <form
+        className="mb-4 flex flex-col sm:flex-row gap-2 relative w-full max-w-md"
+        onSubmit={sendMessage}
+      >
         {error && <div className="text-red-600 text-sm mb-2">{error}</div>}
         <select
           value={recipient}
           onChange={(e) => setRecipient(e.target.value)}
-          className="bg-primary-dark text-secondary border rounded px-2 py-1"
+          className="bg-primary-dark text-secondary border rounded px-2 py-2 w-full sm:w-auto"
         >
           <option value="">Select Recipient</option>
           {allUsers.map((user) => {
@@ -217,53 +247,98 @@ export default function ChatPage() {
           placeholder="Type a message..."
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          className="bg-primary-dark text-secondary placeholder:text-secondary/70 border rounded px-2 py-1 flex-1"
+          className="bg-primary-dark text-secondary placeholder:text-secondary/70 border rounded px-2 py-2 flex-1 min-w-0"
         />
-        <button
-          type="submit"
-          className="bg-accent text-white px-4 py-1 rounded"
-        >
-          Send
-        </button>
+        <div className="flex gap-2 mt-2 sm:mt-0">
+          <button
+            type="button"
+            className="bg-yellow-400 text-black px-3 py-2 rounded text-lg"
+            onClick={() => setShowEmojiPicker((v) => !v)}
+            title="Add emoji"
+          >
+            😊
+          </button>
+          <button
+            type="button"
+            className="bg-blue-400 text-white px-3 py-2 rounded text-base"
+            onClick={() => setShowGifPicker((v) => !v)}
+            title="Add GIF"
+          >
+            GIF
+          </button>
+          <button
+            type="submit"
+            className="bg-accent text-white px-4 py-2 rounded text-base"
+          >
+            Send
+          </button>
+        </div>
+        {showEmojiPicker && (
+          <div style={{ position: "absolute", top: "100%", left: 0 }}>
+            <EmojiPicker onSelect={handleEmojiSelect} />
+          </div>
+        )}
+        {showGifPicker && (
+          <div style={{ position: "absolute", top: "100%", right: 0 }}>
+            <GifPicker onSelect={handleGifSelect} />
+          </div>
+        )}
       </form>
       <div
-        className="w-full max-w-md bg-primary-dark rounded shadow p-4 flex flex-col gap-2 overflow-y-auto"
-        style={{ height: 400 }}
+        className="w-full max-w-md bg-primary-dark rounded shadow p-2 sm:p-4 flex flex-col gap-2 overflow-y-auto"
+        style={{ height: "60vh", minHeight: 240 }}
       >
         {loadingHistory ? (
           <div className="flex justify-center items-center h-full">
-            <span className="text-secondary">
+            <span className="text-secondary text-base text-center">
               Loading conversation history...
             </span>
           </div>
         ) : !recipient ? (
           <div className="flex justify-center items-center h-full">
-            <span className="text-secondary">
+            <span className="text-secondary text-base text-center">
               Select a recipient to start chatting
             </span>
           </div>
         ) : messages.length === 0 ? (
           <div className="flex justify-center items-center h-full">
-            <span className="text-secondary">
+            <span className="text-secondary text-base text-center">
               No messages yet. Start the conversation!
             </span>
           </div>
         ) : (
-          messages.map((msg, i) => (
-            <div
-              key={msg._id || i}
-              className={`p-2 rounded ${
-                msg.sender === userId
-                  ? "bg-primary text-white ml-auto"
-                  : "bg-gray-200 text-black mr-auto"
-              }`}
-            >
-              <span className="block text-xs text-primary">
-                {msg.senderName || userNames[msg.sender] || "Unknown User"}
-              </span>
-              <span>{msg.content}</span>
-            </div>
-          ))
+          messages.map((msg, i) => {
+            // If message content is a GIF URL, render as image
+            const isGif =
+              typeof msg.content === "string" &&
+              (msg.content.endsWith(".gif") ||
+                msg.content.includes("tenor.com"));
+            return (
+              <div
+                key={msg._id || i}
+                className={`p-2 rounded max-w-[80%] ${
+                  msg.sender === userId
+                    ? "bg-primary text-white ml-auto"
+                    : "bg-gray-200 text-black mr-auto"
+                }`}
+                style={{ wordBreak: "break-word" }}
+              >
+                <span className="block text-xs text-primary mb-1">
+                  {msg.senderName || userNames[msg.sender] || "Unknown User"}
+                </span>
+                {isGif ? (
+                  <img
+                    src={msg.content}
+                    alt="GIF"
+                    className="max-w-full max-h-40 rounded"
+                    style={{ width: "100%", height: "auto" }}
+                  />
+                ) : (
+                  <span className="text-base">{msg.content}</span>
+                )}
+              </div>
+            );
+          })
         )}
         <div ref={messagesEndRef} />
       </div>

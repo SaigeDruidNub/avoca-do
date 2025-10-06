@@ -103,6 +103,12 @@ export default function MyProfilePageWrapper() {
     if (res.ok) {
       setEditMode(false);
       await fetchProfile();
+      // Refresh NextAuth session so new image appears in header
+      try {
+        await fetch("/api/auth/session?update", { method: "POST" });
+      } catch (err) {
+        // Ignore errors, session will update on next login
+      }
     } else {
       alert("Failed to update profile");
     }
@@ -151,6 +157,11 @@ export default function MyProfilePageWrapper() {
                     src={f.image || "/logo.png"}
                     alt={f.name || f.email}
                     className="w-8 h-8 rounded-full border border-gray-300"
+                    onError={(e) => {
+                      e.currentTarget.src = "/logo.png";
+                    }}
+                    referrerPolicy="no-referrer"
+                    crossOrigin="anonymous"
                   />
                   <span className="font-medium text-primary-dark">
                     {f.name || f.email}
