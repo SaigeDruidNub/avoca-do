@@ -1,4 +1,7 @@
 {
+  "dashboard.searchNearby": "Vicino",
+  "dashboard.searchInterests": "Interessi simili",
+  "dashboard.suggestedSearchMode": "Trova altre metà per:",
   "dashboard": {
     "title": "Benvenuto nella tua Dashboard!",
     "otherHalves": "Le Tue Altre Metà",

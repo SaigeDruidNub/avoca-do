@@ -1,4 +1,7 @@
 {
+  "dashboard.searchNearby": "近く",
+  "dashboard.searchInterests": "似ている興味",
+  "dashboard.suggestedSearchMode": "他の半分を探す方法：",
   "dashboard": {
     "title": "ダッシュボードへようこそ！",
     "otherHalves": "あなたの他の半分",

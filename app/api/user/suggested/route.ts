@@ -26,6 +26,7 @@ export async function GET(req: NextRequest) {
   const lat = parseFloat(searchParams.get("lat") || "0");
   const lng = parseFloat(searchParams.get("lng") || "0");
   const radius = parseFloat(searchParams.get("radius") || "10");
+  const interest = searchParams.get("interest") || "";
 
   console.log("Suggested API called with:", {
     lat,
@@ -68,19 +69,20 @@ export async function GET(req: NextRequest) {
   if (lat !== 0 || lng !== 0) {
     try {
       console.log("Attempting location-based search...");
-      locationBasedUsers = await User.find({
-        $or: [
-          { locationShared: true },
-          { locationShared: { $exists: false } }, // Include users where field doesn't exist (existing users)
-        ],
+      const query: any = {
+        $or: [{ locationShared: true }, { locationShared: { $exists: false } }],
         location: {
           $nearSphere: {
             $geometry: { type: "Point", coordinates: [lng, lat] },
-            $maxDistance: radius * 1609.34, // miles to meters
+            $maxDistance: radius * 1609.34,
           },
         },
         ...(excludeIds.length > 0 ? { _id: { $nin: excludeIds } } : {}),
-      }).lean();
+      };
+      if (interest) {
+        query.interests = { $in: [interest] };
+      }
+      locationBasedUsers = await User.find(query).lean();
       console.log("Location-based users found:", locationBasedUsers.length);
     } catch (error) {
       console.log("Location-based search failed:", error);
@@ -88,7 +90,7 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // 2. Interest-based matching for users without location or to supplement results
+  // 2. Interest-based matching for users with shared interests (regardless of locationShared)
   if (
     currentUser &&
     currentUser.interests &&
@@ -100,19 +102,21 @@ export async function GET(req: NextRequest) {
       currentUser.interests
     );
 
-    // First try users who explicitly haven't shared location
     interestBasedUsers = await User.find({
-      $and: [
-        { interests: { $in: currentUser.interests } }, // Users with shared interests
-        {
-          $or: [
-            { locationShared: false },
-            { locationShared: { $exists: false } },
-          ],
-        }, // Users who haven't shared location or field doesn't exist
-        ...(excludeIds.length > 0 ? [{ _id: { $nin: excludeIds } }] : []),
-      ],
+      interests: { $in: currentUser.interests },
+      ...(excludeIds.length > 0 ? { _id: { $nin: excludeIds } } : {}),
     }).lean();
+
+    // Sort by number of shared interests descending
+    interestBasedUsers = interestBasedUsers
+      .map((u) => {
+        const sharedInterests = currentUser.interests.filter(
+          (interest: string) => u.interests?.includes(interest)
+        );
+        return { ...u, sharedInterests };
+      })
+      .filter((u) => u.sharedInterests.length > 0)
+      .sort((a, b) => b.sharedInterests.length - a.sharedInterests.length);
 
     console.log("Interest-based users found:", interestBasedUsers.length);
   } else {

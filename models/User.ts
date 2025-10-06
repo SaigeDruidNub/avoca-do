@@ -6,6 +6,7 @@ if (models.User) {
 }
 
 const UserSchema = new Schema({
+  blocked: { type: [String], default: [] }, // Array of blocked user IDs
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   image: { type: String },

@@ -1,4 +1,7 @@
 {
+  "dashboard.searchNearby": "附近",
+  "dashboard.searchInterests": "相似兴趣",
+  "dashboard.suggestedSearchMode": "按以下方式寻找另一半：",
   "dashboard": {
     "title": "欢迎来到您的仪表板！",
     "otherHalves": "您的另一半",

@@ -1,4 +1,7 @@
 {
+  "dashboard.searchNearby": "Perto",
+  "dashboard.searchInterests": "Interesses semelhantes",
+  "dashboard.suggestedSearchMode": "Encontrar outras metades por:",
   "dashboard": {
     "title": "Bem-vindo ao seu Painel!",
     "otherHalves": "Suas Outras Metades",

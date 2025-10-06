@@ -38,8 +38,18 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(posts);
   }
 
-  // Default: posts from self and friends (by _id)
-  const feedIds = [user._id.toString(), ...(user.friends || [])];
+  // Default: posts from self and mutual friends (mutual 'other halves')
+  const myId = user._id.toString();
+  const friendIds = user.friends || [];
+  // Find users whose _id is in my friends array AND who have me in their friends array
+  const mutualFriends = await UserModel.find({
+    _id: { $in: friendIds },
+    friends: { $in: [myId] },
+  })
+    .select("_id")
+    .lean();
+  const mutualFriendIds = mutualFriends.map((u: any) => u._id.toString());
+  const feedIds = [myId, ...mutualFriendIds];
   const feedPosts = await Post.find({ userId: { $in: feedIds } })
     .sort({ createdAt: -1 })
     .lean();
@@ -48,6 +58,11 @@ export async function GET(req: NextRequest) {
 
 // POST: create a new post
 export async function POST(req: NextRequest) {
+  // Debug log to diagnose GIF-only post issue
+  // Place after all assignments, before validation
+  // This must be after message, imageUrl, gifUrl, finalGifUrl are set
+  // Move this log to after imageUrl and finalGifUrl assignment block
+  // (right before validation)
   await dbConnect();
   const session = await getServerSession();
   if (!session || !session.user) {
@@ -56,11 +71,18 @@ export async function POST(req: NextRequest) {
 
   // Parse form data (multipart)
   const formData = await req.formData();
-  const message = formData.get("message");
+  // Explicitly set message to empty string if missing
+  let message = formData.get("message");
+  if (typeof message !== "string" || message == null) message = "";
   const image = formData.get("image");
+  const gifUrl = formData.get("gifUrl");
 
   let imageUrl = "";
-  if (
+  let finalGifUrl = "";
+  if (gifUrl && typeof gifUrl === "string" && gifUrl.length > 0) {
+    imageUrl = gifUrl;
+    finalGifUrl = gifUrl;
+  } else if (
     image &&
     typeof image === "object" &&
     "arrayBuffer" in image &&
@@ -94,12 +116,21 @@ export async function POST(req: NextRequest) {
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
+  // Only allow post if message or imageUrl (GIF or image) is present
+  if ((!message || message.trim() === "") && !imageUrl) {
+    return NextResponse.json(
+      { error: "Post must have text or a GIF/image." },
+      { status: 400 }
+    );
+  }
+  // IMPORTANT: If you still get 'message is required', restart the server to reload the schema.
   const post = await Post.create({
     userId: user._id.toString(),
     userName: user.name,
     userImage: user.image,
     message,
     imageUrl,
+    gifUrl: finalGifUrl,
   });
   return NextResponse.json(post);
 }

@@ -1,4 +1,7 @@
 {
+  "dashboard.searchNearby": "À proximité",
+  "dashboard.searchInterests": "Intérêts similaires",
+  "dashboard.suggestedSearchMode": "Trouver d'autres moitiés par :",
   "dashboard": {
     "title": "Bienvenue sur votre tableau de bord !",
     "otherHalves": "Vos Autres Moitiés",

@@ -25,6 +25,7 @@ export async function GET() {
     job: user.job || "",
     school: user.school || "",
     about: user.about || "",
+    interests: user.interests || [],
   });
 }
 

@@ -1,4 +1,7 @@
 {
+  "dashboard.searchNearby": "Cerca",
+  "dashboard.searchInterests": "Intereses similares",
+  "dashboard.suggestedSearchMode": "Buscar otras mitades por:",
   "dashboard": {
     "title": "¡Bienvenido a tu Panel!",
     "otherHalves": "Tus Otras Mitades",

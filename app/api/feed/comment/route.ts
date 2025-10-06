@@ -9,10 +9,10 @@ export async function POST(req: NextRequest) {
   if (!session?.user?.email) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const { postId, message } = await req.json();
-  if (!postId || !message) {
+  const { postId, message, gifUrl } = await req.json();
+  if (!postId || (!message && !gifUrl)) {
     return NextResponse.json(
-      { error: "Missing postId or message" },
+      { error: "Missing postId or comment content" },
       { status: 400 }
     );
   }
@@ -23,7 +23,8 @@ export async function POST(req: NextRequest) {
     _id: new ObjectId().toString(),
     userId: session.user.email,
     userName: session.user.name || session.user.email,
-    message,
+    message: message || "",
+    gifUrl: gifUrl || "",
     createdAt: new Date().toISOString(),
   };
   await Post.updateOne({ _id: postId }, { $push: { comments: comment } });

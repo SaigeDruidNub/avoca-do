@@ -1,6 +1,8 @@
 import React from "react";
 import { notFound } from "next/navigation";
 import AddOtherHalfButton from "./AddOtherHalfButton";
+import ProfileImage from "./ProfileImage";
+import BlockUserButton from "./BlockUserButton";
 
 import dbConnect from "@/lib/mongodb";
 import UserModel from "@/models/User";
@@ -33,31 +35,36 @@ export default async function ProfilePage({
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-primary">
-      <div className="w-full max-w-md flex flex-row justify-between items-center mb-4">
-        <a href="/dashboard">
-          <button
-            className="bg-accent text-white px-4 py-2 rounded shadow hover:bg-accent-dark transition"
-            type="button"
-          >
-            &larr; Back to Dashboard
-          </button>
-        </a>
-        <div className="flex gap-2">
-          <a href={`/chat?with=${user._id}`}>
+      <div className="w-full max-w-md flex flex-row justify-center items-center mb-4">
+        <div className="flex gap-4 w-full justify-center">
+          <a href="/dashboard" className="w-40">
             <button
-              className="bg-blue-500 text-white px-4 py-2 rounded shadow hover:bg-blue-600 transition"
+              className="w-full h-16 bg-accent text-white text-lg font-medium rounded shadow hover:bg-accent-dark transition flex items-center justify-center"
+              type="button"
+            >
+              &larr; Back to Dashboard
+            </button>
+          </a>
+          <a href={`/chat?with=${user._id}`} className="w-40">
+            <button
+              className="w-full h-16 bg-secondary text-white text-lg font-medium rounded shadow hover:bg-secondary transition flex items-center justify-center"
               type="button"
             >
               💬 Send Message
             </button>
           </a>
-          <AddOtherHalfButton friendId={user._id} />
+          <div className="w-40">
+            <AddOtherHalfButton friendId={String(user._id)} />
+          </div>
+          <div className="w-40">
+            <BlockUserButton userId={String(user._id)} />
+          </div>
         </div>
       </div>
       <div className="bg-primary-dark rounded-lg shadow p-8 w-full max-w-md flex flex-col items-center">
         {/* Consider using next/image for better performance */}
-        <img
-          src={user.image || "/logo.png"}
+        <ProfileImage
+          src={user.image}
           alt={user.name || user.email}
           className="w-24 h-24 rounded-full border border-gray-300 mb-4"
         />

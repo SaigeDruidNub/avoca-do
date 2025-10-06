@@ -366,21 +366,21 @@ export default function SettingsPage() {
           Select your interests to personalize your experience.
         </p>
         <div className="w-full max-w-4xl bg-primary-dark rounded-lg shadow p-6 flex flex-col gap-4">
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">
+          <h2 className="text-xl font-semibold mb-4 text-secondary">
             Select your interests
           </h2>
           <form className="flex flex-col gap-3" onSubmit={handleSave}>
             {Object.entries(interestsCategories).map(
               ([category, interests]) => (
                 <div key={category} className="mb-6">
-                  <h3 className="text-lg font-medium text-gray-800 mb-3 border-b border-gray-300 pb-2">
+                  <h3 className="text-lg font-medium text-secondary mb-3 border-b border-gray-300 pb-2">
                     {category}
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 ml-4">
                     {interests.map((interest: string) => (
                       <label
                         key={interest}
-                        className="flex items-center gap-2 text-gray-700 text-sm"
+                        className="flex items-center gap-2 text-secondary text-sm"
                       >
                         <input
                           type="checkbox"
@@ -395,7 +395,7 @@ export default function SettingsPage() {
                     ))}
                     {/* Other option */}
                     <div className="col-span-full mt-2">
-                      <label className="flex items-center gap-2 text-gray-700 text-sm font-medium">
+                      <label className="flex items-center gap-2 text-secondary text-sm font-medium">
                         <input
                           type="checkbox"
                           checked={showOtherInputs[category] || false}
@@ -416,9 +416,9 @@ export default function SettingsPage() {
                                 e.target.value
                               )
                             }
-                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-secondary"
                           />
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-secondary mt-1">
                             Separate multiple interests with commas (e.g.,
                             "Interest 1, Interest 2, Interest 3"). Popular
                             custom interests may be added to the official list
@@ -440,7 +440,7 @@ export default function SettingsPage() {
             </button>
 
             {message && (
-              <div className="text-sm mt-2 text-foreground">{message}</div>
+              <div className="text-sm mt-2 text-secondary">{message}</div>
             )}
           </form>
         </div>
