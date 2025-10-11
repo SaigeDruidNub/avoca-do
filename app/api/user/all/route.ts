@@ -21,6 +21,17 @@ export async function GET(req: NextRequest) {
   // Get friends from user's friends array
   const friendIds = me.friends || [];
 
+  // Get blocked users to exclude them
+  const blockedByMe = me.blocked || [];
+
+  // Find users who have blocked the current user
+  const usersWhoBlockedMe = await User.find({
+    blocked: me._id.toString(),
+  })
+    .select("_id")
+    .lean();
+  const blockedMeIds = usersWhoBlockedMe.map((u: any) => u._id.toString());
+
   // Find users who have sent or received messages from the current user
   const messages = await Message.find({
     $or: [{ sender: me._id }, { recipient: me._id }],
@@ -48,9 +59,17 @@ export async function GET(req: NextRequest) {
     ...Array.from(messageUserIds),
   ]);
 
-  // Find users who are either friends or have message history
+  // Create exclusion list (users blocked by me + users who blocked me)
+  const excludeUserIds = [...blockedByMe, ...blockedMeIds];
+
+  // Filter out blocked users from relevant user IDs
+  const filteredUserIds = Array.from(relevantUserIds).filter(
+    (id) => !excludeUserIds.includes(id)
+  );
+
+  // Find users who are either friends or have message history (excluding blocked users)
   const users = await User.find({
-    _id: { $in: Array.from(relevantUserIds) },
+    _id: { $in: filteredUserIds },
   })
     .select("_id name image email")
     .lean();

@@ -26,7 +26,18 @@ export default function AddOtherHalfButton({
         setAdded(true);
         if (onAdded) onAdded();
       } else {
-        setError(data.error || data.message || "Failed to add friend");
+        // Handle specific error messages for blocked users
+        if (res.status === 403) {
+          if (data.error?.includes("blocked user")) {
+            setError("Cannot add blocked users as other half");
+          } else if (data.error?.includes("has blocked you")) {
+            setError("This user has blocked you");
+          } else {
+            setError(data.error || "Access denied");
+          }
+        } else {
+          setError(data.error || data.message || "Failed to add friend");
+        }
       }
     } catch (e) {
       setError("Network error");
@@ -44,7 +55,9 @@ export default function AddOtherHalfButton({
       >
         {added ? "Added!" : loading ? "Adding..." : "Add as Other Half"}
       </button>
-      {error && <div className="text-red-500 text-xs mt-1">{error}</div>}
+      {error && (
+        <div className="text-red-500 text-sm mt-2 font-medium">{error}</div>
+      )}
     </div>
   );
 }

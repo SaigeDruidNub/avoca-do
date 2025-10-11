@@ -4,7 +4,7 @@ import UserModel from "@/models/User";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
-// POST /api/user/block
+// POST /api/user/unblock
 // Body: { userId: string }
 export async function POST(req: NextRequest) {
   try {
@@ -19,7 +19,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing userId" }, { status: 400 });
     }
 
-    console.log("Attempting to block user:", userId, "by:", session.user.email);
+    console.log(
+      "Attempting to unblock user:",
+      userId,
+      "by:",
+      session.user.email
+    );
 
     const me = await UserModel.findOne({ email: session.user.email });
     if (!me) {
@@ -45,40 +50,25 @@ export async function POST(req: NextRequest) {
     }
 
     if (!Array.isArray(me.blocked)) me.blocked = [];
-    if (me.blocked.includes(userId)) {
-      return NextResponse.json({ message: "Already blocked" });
+    if (!me.blocked.includes(userId)) {
+      return NextResponse.json({ message: "User was not blocked" });
     }
 
-    me.blocked.push(userId);
-
-    // Also remove the user from friends list if they were friends
-    if (Array.isArray(me.friends) && me.friends.includes(userId)) {
-      me.friends = me.friends.filter((friendId: string) => friendId !== userId);
-      console.log("Removed blocked user from friends list");
-    }
-
-    // Also remove current user from target user's friends list (mutual unfriending)
-    if (
-      Array.isArray(targetUser.friends) &&
-      targetUser.friends.includes(String(me._id))
-    ) {
-      targetUser.friends = targetUser.friends.filter(
-        (friendId: string) => friendId !== String(me._id)
-      );
-      await targetUser.save();
-      console.log("Removed current user from target user's friends list");
-    }
-
+    // Remove user from blocked list
+    me.blocked = me.blocked.filter((id: string) => id !== userId);
     const saved = await me.save();
-    console.log("User blocked successfully. New blocked list:", saved.blocked);
+    console.log(
+      "User unblocked successfully. New blocked list:",
+      saved.blocked
+    );
 
     return NextResponse.json({
-      message: "User blocked",
-      blockedUser: targetUser.name,
+      message: "User unblocked",
+      unblockedUser: targetUser.name,
       totalBlocked: saved.blocked.length,
     });
   } catch (error) {
-    console.error("Error blocking user:", error);
+    console.error("Error unblocking user:", error);
     return NextResponse.json(
       {
         error: "Internal server error",

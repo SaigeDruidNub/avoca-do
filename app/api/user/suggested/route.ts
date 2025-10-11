@@ -58,6 +58,29 @@ export async function GET(req: NextRequest) {
     // Also exclude self
     if (currentUser && currentUser._id)
       excludeIds.push(String(currentUser._id));
+
+    // Exclude users that the current user has blocked
+    if (
+      currentUser &&
+      currentUser.blocked &&
+      Array.isArray(currentUser.blocked)
+    ) {
+      excludeIds.push(...currentUser.blocked.map(String));
+      console.log("Excluding blocked users:", currentUser.blocked);
+    }
+
+    // Find and exclude users who have blocked the current user
+    if (currentUser && currentUser._id) {
+      const usersWhoBlockedMe = await User.find({
+        blocked: String(currentUser._id),
+      })
+        .select("_id")
+        .lean();
+
+      const blockedByIds = usersWhoBlockedMe.map((u) => String(u._id));
+      excludeIds.push(...blockedByIds);
+      console.log("Excluding users who blocked current user:", blockedByIds);
+    }
   }
 
   console.log("Exclude IDs:", excludeIds);

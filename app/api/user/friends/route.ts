@@ -52,6 +52,44 @@ export async function POST(req: NextRequest) {
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
+
+  // Check if the user is trying to add themselves
+  if (String(user._id) === friendId) {
+    return NextResponse.json(
+      { error: "Cannot add yourself as other half" },
+      { status: 400 }
+    );
+  }
+
+  // Find the target user to check if they exist and their blocked status
+  const targetUser = await UserModel.findById(friendId);
+  if (!targetUser) {
+    return NextResponse.json(
+      { error: "Target user not found" },
+      { status: 404 }
+    );
+  }
+
+  // Check if current user has blocked the target user
+  const currentUserBlocked = Array.isArray(user.blocked) ? user.blocked : [];
+  if (currentUserBlocked.includes(friendId)) {
+    return NextResponse.json(
+      { error: "Cannot add blocked user as other half" },
+      { status: 403 }
+    );
+  }
+
+  // Check if target user has blocked the current user
+  const targetUserBlocked = Array.isArray(targetUser.blocked)
+    ? targetUser.blocked
+    : [];
+  if (targetUserBlocked.includes(String(user._id))) {
+    return NextResponse.json(
+      { error: "Cannot add user who has blocked you as other half" },
+      { status: 403 }
+    );
+  }
+
   if (user.friends.includes(friendId)) {
     return NextResponse.json({ message: "Already friends" });
   }
