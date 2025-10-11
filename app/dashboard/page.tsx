@@ -40,7 +40,6 @@ export default function DashboardPage() {
   interface SuggestedUser {
     _id: string;
     name?: string;
-    email?: string;
     image?: string;
     interests?: string[];
     distance?: number;
@@ -726,7 +725,7 @@ export default function DashboardPage() {
                       <li key={user._id} className="flex items-center gap-4">
                         <img
                           src={user.image || getRoboHashAvatar(user._id)}
-                          alt={user.name || user.email}
+                          alt={user.name || "User"}
                           className="w-12 h-12 rounded-full border border-gray-300"
                           onError={(e) => {
                             // ...existing error handling...
@@ -754,7 +753,7 @@ export default function DashboardPage() {
                             href={`/profile/${encodeURIComponent(user._id)}`}
                             className="font-bold text-lg text-secondary hover:underline focus:underline"
                           >
-                            {user.name || user.email}
+                            {user.name || "Anonymous User"}
                           </Link>
                           <div className="text-sm text-primary">
                             {user.matchType === "interests" &&

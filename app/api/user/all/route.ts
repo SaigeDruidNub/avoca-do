@@ -71,15 +71,14 @@ export async function GET(req: NextRequest) {
   const users = await User.find({
     _id: { $in: filteredUserIds },
   })
-    .select("_id name image email")
+    .select("_id name image")
     .lean();
 
-  // Format users for the frontend
+  // Format users for the frontend (excluding email for privacy)
   const allUsers = users.map((user: any) => ({
     _id: user._id.toString(),
     name: user.name as string,
     image: user.image as string | undefined,
-    email: user.email as string,
   }));
 
   return NextResponse.json(allUsers);
