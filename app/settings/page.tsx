@@ -9,6 +9,13 @@ export default function SettingsPage() {
 
   const settingsCards = [
     {
+      title: "Search Users",
+      description:
+        "Find and connect with other users by searching for their name or email address.",
+      href: "/settings/search",
+      icon: "🔍",
+    },
+    {
       title: "Interests",
       description:
         "Manage your interests to personalize your experience and connect with like-minded people.",

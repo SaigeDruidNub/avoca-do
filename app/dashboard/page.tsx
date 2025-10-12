@@ -2,7 +2,13 @@
 "use client";
 import React, { useState, useEffect as useReactEffect } from "react";
 import Link from "next/link";
-import { FaThumbsUp, FaThumbsDown } from "react-icons/fa";
+import {
+  FaThumbsUp,
+  FaThumbsDown,
+  FaSearch,
+  FaComments,
+  FaCog,
+} from "react-icons/fa";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -432,16 +438,24 @@ export default function DashboardPage() {
         <div className="hidden md:flex items-center gap-4">
           <LanguageSwitcher />
           <Link
-            href="/chat"
-            className="text-sm font-medium text-foreground hover:underline relative"
+            href="/settings/search"
+            className="text-sm font-medium text-foreground hover:underline flex items-center gap-1"
           >
+            <FaSearch className="text-secondary-dark" /> Search Users
+          </Link>
+          <Link
+            href="/chat"
+            className="text-sm font-medium text-foreground hover:underline relative flex items-center gap-1"
+          >
+            <FaComments className="text-secondary-dark" />
             {t("dashboard.connectWithOtherHalves")}
             <NotificationDot className="-top-1 -right-1" />
           </Link>
           <Link
             href="/settings"
-            className="text-sm font-medium text-foreground hover:underline"
+            className="text-sm font-medium text-foreground hover:underline flex items-center gap-1"
           >
+            <FaCog className="text-secondary-dark" />
             {t("dashboard.settings")}
           </Link>
           {userProfile && (
@@ -467,16 +481,24 @@ export default function DashboardPage() {
           <div className="flex flex-col gap-2 mt-4 md:hidden w-full">
             <LanguageSwitcher />
             <Link
-              href="/chat"
-              className="text-sm font-medium text-foreground hover:underline relative"
+              href="/settings/search"
+              className="text-sm font-medium text-foreground hover:underline flex items-center gap-1"
             >
+              <FaSearch className="text-secondary-dark" /> Search Users
+            </Link>
+            <Link
+              href="/chat"
+              className="text-sm font-medium text-foreground hover:underline relative flex items-center gap-1"
+            >
+              <FaComments className="text-secondary-dark" />
               {t("dashboard.connectWithOtherHalves")}
               <NotificationDot className="-top-1 -right-1" />
             </Link>
             <Link
               href="/settings"
-              className="text-sm font-medium text-foreground hover:underline"
+              className="text-sm font-medium text-foreground hover:underline flex items-center gap-1"
             >
+              <FaCog className="text-secondary-dark" />
               {t("dashboard.settings")}
             </Link>
             {userProfile && (
