@@ -38,7 +38,6 @@ export function AutoTranslatorDebug() {
 
       const data = await response.json();
       setTranslationResult(data.translatedText);
-      console.log("Translation API Test Result:", data);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : "Unknown error";
       setError(errorMsg);
@@ -56,7 +55,6 @@ export function AutoTranslatorDebug() {
       const result = await translateText(testText);
       if (result) {
         setTranslationResult(result);
-        console.log("Provider Translation Result:", result);
       } else {
         throw new Error("No translation result from provider");
       }
@@ -85,8 +83,6 @@ export function AutoTranslatorDebug() {
 
     // Add the new test element
     document.body.appendChild(testDiv);
-
-    console.log("🔧 Test element created and added to page");
   };
 
   return (

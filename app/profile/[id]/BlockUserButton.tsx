@@ -38,36 +38,30 @@ const BlockUserButton: React.FC<BlockUserButtonProps> = ({ userId }) => {
     try {
       if (blocked) {
         // Unblock user
-        console.log("Attempting to unblock user with ID:", userId);
         const res = await fetch("/api/user/unblock", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ userId }),
         });
         const data = await res.json();
-        console.log("Unblock API response:", res.status, data);
 
         if (res.ok) {
           setBlocked(false);
-          console.log("User unblocked successfully:", data);
         } else {
           console.error("Failed to unblock user:", data);
           setError(data.error || data.message || "Failed to unblock user");
         }
       } else {
         // Block user
-        console.log("Attempting to block user with ID:", userId);
         const res = await fetch("/api/user/block", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ userId }),
         });
         const data = await res.json();
-        console.log("Block API response:", res.status, data);
 
         if (res.ok) {
           setBlocked(true);
-          console.log("User blocked successfully:", data);
         } else {
           console.error("Failed to block user:", data);
           setError(data.error || data.message || "Failed to block user");

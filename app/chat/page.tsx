@@ -70,9 +70,7 @@ export default function ChatPage() {
     fetch("/api/user/me")
       .then((res) => res.json())
       .then((user) => {
-        console.log("Fetched user data:", user);
         if (user && user._id) {
-          console.log("Setting userId and joining room:", user._id);
           setUserId(user._id);
           socket.emit("join", user._id);
         } else {
@@ -84,7 +82,6 @@ export default function ChatPage() {
       });
     // Listen for messages
     socket.on("message", (msg: Message) => {
-      console.log("Received message:", msg);
       setMessages((prev) => [...prev, msg]);
     });
 
@@ -115,7 +112,6 @@ export default function ChatPage() {
         const response = await fetch(`/api/message/history?with=${recipient}`);
         if (response.ok) {
           const history = await response.json();
-          console.log("Loaded message history:", history);
           setMessages(history);
 
           // Mark all messages from this sender as read

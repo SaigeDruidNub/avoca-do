@@ -7,6 +7,7 @@ import React, {
   useEffect,
 } from "react";
 import { useTranslation } from "./LanguageProvider";
+import { translationUtils } from "../lib/translation-utils";
 
 export interface AutoTranslationSettings {
   enabled: boolean;
@@ -58,7 +59,7 @@ const AutoTranslationContext = createContext<
   AutoTranslationContextType | undefined
 >(undefined);
 
-const SETTINGS_VERSION = 2; // Increment when excludeSelectors change
+const SETTINGS_VERSION = 3; // Increment when excludeSelectors change
 
 const DEFAULT_SETTINGS: AutoTranslationSettings = {
   enabled: false,
@@ -81,6 +82,42 @@ const DEFAULT_SETTINGS: AutoTranslationSettings = {
     ".auto-translator-processing",
     ".no-translate",
     "[contenteditable]",
+    // Comprehensive name-related selectors
+    "*[class*='name']",
+    "*[class*='user']",
+    "*[class*='author']",
+    "*[class*='profile']",
+    "*[class*='title']",
+    "*[class*='handle']",
+    "*[id*='name']",
+    "*[id*='user']",
+    "*[id*='author']",
+    "*[id*='profile']",
+    "*[data-name]",
+    "*[data-username]",
+    "*[data-user-name]",
+    "*[data-display-name]",
+    "*[data-full-name]",
+    "*[data-author]",
+    "*[data-profile]",
+    "h1",
+    "h2",
+    "h3", // Headers often contain names/titles
+    // Specific common class names
+    ".username",
+    ".user-name",
+    ".display-name",
+    ".profile-name",
+    ".author-name",
+    ".full-name",
+    ".first-name",
+    ".last-name",
+    ".real-name",
+    ".given-name",
+    ".surname",
+    ".nickname",
+    ".title",
+    ".name",
   ],
   batchSize: 10,
   debounceMs: 500,
@@ -108,7 +145,6 @@ export function AutoTranslationProvider({
 
   // Update target language when locale changes
   useEffect(() => {
-    console.log("🔧 AutoTranslationProvider: Locale changed to:", locale);
     setSettings((prev) => {
       const newSettings = {
         ...prev,
@@ -117,9 +153,6 @@ export function AutoTranslationProvider({
 
       // Auto-enable translation when user changes to a non-English language
       if (locale !== "en" && !prev.enabled) {
-        console.log(
-          "🔧 AutoTranslationProvider: Auto-enabling translation for non-English locale"
-        );
         newSettings.enabled = true;
       }
 
@@ -136,9 +169,6 @@ export function AutoTranslationProvider({
           const parsed = JSON.parse(savedSettings);
           // Check if settings are from old version
           if (parsed.version !== SETTINGS_VERSION) {
-            console.log(
-              "🔧 AutoTranslationProvider: Clearing old settings version"
-            );
             localStorage.removeItem("autoTranslationSettings");
             setSettings(DEFAULT_SETTINGS);
           } else {
@@ -207,14 +237,12 @@ export function AutoTranslationProvider({
       }
 
       // Note: Server-side cache clearing would need an additional API endpoint
-      console.log("Translation cache cleared");
     } catch (error) {
       console.error("Failed to clear cache:", error);
     }
   }, []);
 
   const forceRefresh = useCallback(() => {
-    console.log("🔧 AutoTranslationProvider: Force refresh triggered");
     setForceRefreshCounter((prev) => prev + 1);
   }, []);
 
@@ -272,16 +300,6 @@ export function AutoTranslationProvider({
           const matches = element.matches(selector);
           const closest = element.closest(selector);
           if (matches || closest) {
-            console.log(
-              "🔧 shouldSkipElement: Element",
-              element.tagName,
-              "matches selector:",
-              selector,
-              "direct:",
-              matches,
-              "closest:",
-              !!closest
-            );
             return true;
           }
           return false;
@@ -296,97 +314,30 @@ export function AutoTranslationProvider({
 
   const translateElement = useCallback(
     async (element: Element): Promise<void> => {
-      console.log(
-        "🔧 translateElement called for:",
-        element.tagName,
-        element.textContent?.slice(0, 50),
-        "enabled:",
-        settings.enabled,
-        "targetLanguage:",
-        settings.targetLanguage
-      );
-
       if (!settings.enabled) {
-        console.log("🔧 translateElement: Translation not enabled");
-        return;
       }
 
       const shouldSkip = shouldSkipElement(element);
-      console.log("🔧 translateElement: shouldSkip result:", shouldSkip);
 
       if (shouldSkip) {
-        console.log("🔧 translateElement: Element should be skipped");
         return;
       }
 
       try {
-        console.log("🔧 translateElement: Starting translation for element");
         setIsProcessing(true);
 
         // Add processing class to prevent re-processing
         element.classList.add("auto-translator-processing");
 
-        // Find all text nodes in the element
-        const textNodes: Text[] = [];
-        const walker = document.createTreeWalker(
-          element,
-          NodeFilter.SHOW_TEXT,
-          {
-            acceptNode: (node) => {
-              const parent = node.parentElement;
-              const text = node.textContent?.trim() || "";
-
-              if (!parent) {
-                return NodeFilter.FILTER_REJECT;
-              }
-
-              // Check parent for exclusion but ignore .auto-translator-processing since we're currently processing
-              const shouldSkipParent = settings.excludeSelectors
-                .filter(
-                  (selector) => selector !== ".auto-translator-processing"
-                ) // Skip this selector
-                .some((selector) => {
-                  try {
-                    return parent.matches(selector) || parent.closest(selector);
-                  } catch {
-                    return false;
-                  }
-                });
-
-              if (shouldSkipParent) {
-                return NodeFilter.FILTER_REJECT;
-              }
-
-              if (text.length <= 1) {
-                return NodeFilter.FILTER_REJECT;
-              }
-
-              return NodeFilter.FILTER_ACCEPT;
-            },
-          }
-        );
-
-        let node;
-        while ((node = walker.nextNode())) {
-          textNodes.push(node as Text);
-        }
+        // Use the improved text node extraction from translationUtils
+        const textNodes = translationUtils.extractTextNodes(element);
 
         // Batch translate text nodes
         const textsToTranslate = textNodes.map(
-          (node) => node.textContent || ""
-        );
-
-        console.log(
-          "🔧 translateElement: Found",
-          textsToTranslate.length,
-          "text nodes:",
-          textsToTranslate
+          (node: Text) => node.textContent || ""
         );
 
         if (textsToTranslate.length === 0) {
-          console.log(
-            "🔧 translateElement: No text nodes to translate, skipping API calls"
-          );
         } else {
           // Process in batches
           for (
@@ -396,13 +347,6 @@ export function AutoTranslationProvider({
           ) {
             const batch = textsToTranslate.slice(i, i + settings.batchSize);
             const batchNodes = textNodes.slice(i, i + settings.batchSize);
-
-            console.log(
-              "🔧 translateElement: Translating batch:",
-              batch,
-              "target:",
-              settings.targetLanguage
-            );
 
             try {
               const response = await fetch("/api/translate", {
@@ -417,14 +361,8 @@ export function AutoTranslationProvider({
                 }),
               });
 
-              console.log(
-                "🔧 translateElement: API response status:",
-                response.status
-              );
-
               if (response.ok) {
                 const data = await response.json();
-                console.log("🔧 translateElement: API response data:", data);
 
                 if (data.translations) {
                   data.translations.forEach(
@@ -433,12 +371,6 @@ export function AutoTranslationProvider({
                         const originalText = batchNodes[index].textContent;
                         batchNodes[index].textContent =
                           translation.translatedText;
-                        console.log(
-                          "🔧 translateElement: Updated text:",
-                          originalText,
-                          "->",
-                          translation.translatedText
-                        );
                       }
                     }
                   );
@@ -462,10 +394,6 @@ export function AutoTranslationProvider({
 
         // Mark element as translated
         element.setAttribute("data-translated", "true");
-        console.log(
-          "🔧 translateElement: Successfully translated element:",
-          element.tagName
-        );
       } catch (error) {
         console.error("🔧 translateElement: Element translation error:", error);
       } finally {

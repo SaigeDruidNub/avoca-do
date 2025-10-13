@@ -12,8 +12,6 @@
     <script>
         // Simple test to verify translation API
         async function testTranslation() {
-            console.log("Testing translation API...");
-            
             try {
                 const response = await fetch('/api/translate', {
                     method: 'POST',
@@ -28,12 +26,12 @@
                 
                 if (response.ok) {
                     const data = await response.json();
-                    console.log("✅ Translation API works:", data);
+                    // Translation API works: data
                 } else {
-                    console.error("❌ Translation API failed:", response.status);
+                    // Translation API failed
                 }
             } catch (error) {
-                console.error("❌ Translation API error:", error);
+                // Translation API error
             }
         }
         

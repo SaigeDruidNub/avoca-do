@@ -281,11 +281,6 @@ export default function DashboardPage() {
 
         // Trigger translation after posts are loaded and rendered
         if (isTranslationEnabled && Array.isArray(data) && data.length > 0) {
-          console.log(
-            "🔧 Dashboard: Triggering translation for",
-            data.length,
-            "posts"
-          );
           // Use setTimeout to ensure DOM is updated after state change
           setTimeout(() => {
             translatePosts();
@@ -341,7 +336,6 @@ export default function DashboardPage() {
           localStorage.setItem("userLocation", JSON.stringify(coords));
         },
         (error) => {
-          console.log("Location access declined or failed:", error);
           setLocError(
             "Location sharing declined. You can still discover other halves through shared interests!"
           );
@@ -373,7 +367,6 @@ export default function DashboardPage() {
           `https://maps.googleapis.com/maps/api/geocode/json?latlng=${location.lat},${location.lng}&key=${apiKey}`
         );
         const data = await res.json();
-        console.log("Geocoding API response:", data);
         if (data.status === "OK" && data.results.length > 0) {
           type AddressComponent = {
             long_name: string;

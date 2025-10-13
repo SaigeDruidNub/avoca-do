@@ -14,7 +14,6 @@ export function useTranslateContent() {
   const translateContainer = useCallback(
     async (container: Element | string) => {
       if (!isEnabled) {
-        console.log("🔧 useTranslateContent: Translation not enabled");
         return;
       }
 
@@ -23,14 +22,11 @@ export function useTranslateContent() {
       if (typeof container === "string") {
         element = document.querySelector(container);
         if (!element) {
-          console.warn("🔧 useTranslateContent: Element not found:", container);
           return;
         }
       } else {
         element = container;
       }
-
-      console.log("🔧 useTranslateContent: Translating container:", element);
 
       try {
         // Find all elements with text content within the container
@@ -132,16 +128,6 @@ export function useTranslateContent() {
           elementsToTranslate.push(node as Element);
         }
 
-        console.log(
-          "🔧 useTranslateContent: Found",
-          elementsToTranslate.length,
-          "elements to translate:",
-          elementsToTranslate.map((el) => ({
-            tag: el.tagName,
-            text: el.textContent?.slice(0, 50),
-          }))
-        );
-
         // Translate each element
         for (const el of elementsToTranslate) {
           // Skip if already has translation marker
@@ -149,22 +135,11 @@ export function useTranslateContent() {
             el.hasAttribute("data-translated") ||
             el.classList.contains("auto-translator-processing")
           ) {
-            console.log(
-              "🔧 useTranslateContent: Skipping already processed element:",
-              el.tagName
-            );
             continue;
           }
 
-          console.log(
-            "🔧 useTranslateContent: Calling translateElement for:",
-            el.tagName,
-            el.textContent?.slice(0, 50)
-          );
           await translateElement(el);
         }
-
-        console.log("🔧 useTranslateContent: Translation complete");
       } catch (error) {
         console.error("🔧 useTranslateContent: Translation error:", error);
       }
@@ -176,15 +151,11 @@ export function useTranslateContent() {
    * Translate all posts in the feed
    */
   const translatePosts = useCallback(async () => {
-    console.log("🔧 translatePosts: Starting post translation...");
     const feedContainer = document.querySelector(
       '[data-posts-container], [class*="feed"], .posts, main section:last-child'
     );
-    console.log("🔧 translatePosts: Found container:", feedContainer);
     if (feedContainer) {
       await translateContainer(feedContainer);
-    } else {
-      console.warn("🔧 useTranslateContent: Feed container not found");
     }
   }, [translateContainer]);
 

@@ -19,30 +19,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing userId" }, { status: 400 });
     }
 
-    console.log(
-      "Attempting to unblock user:",
-      userId,
-      "by:",
-      session.user.email
-    );
-
     const me = await UserModel.findOne({ email: session.user.email });
     if (!me) {
-      console.log("Current user not found in database:", session.user.email);
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
-
-    console.log(
-      "Current user found:",
-      me._id,
-      "Current blocked list:",
-      me.blocked
-    );
 
     // Verify target user exists
     const targetUser = await UserModel.findById(userId);
     if (!targetUser) {
-      console.log("Target user not found:", userId);
       return NextResponse.json(
         { error: "Target user not found" },
         { status: 404 }
@@ -57,10 +41,6 @@ export async function POST(req: NextRequest) {
     // Remove user from blocked list
     me.blocked = me.blocked.filter((id: string) => id !== userId);
     const saved = await me.save();
-    console.log(
-      "User unblocked successfully. New blocked list:",
-      saved.blocked
-    );
 
     return NextResponse.json({
       message: "User unblocked",

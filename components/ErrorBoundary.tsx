@@ -36,7 +36,6 @@ class ErrorBoundary extends React.Component<
       error.name === "ChunkLoadError" ||
       error.message.includes("Loading chunk")
     ) {
-      console.log("ChunkLoadError detected, attempting to reload...");
       window.location.reload();
     }
   }

@@ -80,19 +80,15 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
         if (userData && userData._id) {
           setUserId(userData._id);
 
-          console.log(
-            "[NotificationProvider] Connecting to socket:",
-            SOCKET_URL
-          );
           const newSocket = io(SOCKET_URL, { transports: ["websocket"] });
           setSocket(newSocket);
 
           newSocket.on("connect", () => {
-            console.log("[NotificationProvider] Socket connected successfully");
+            // Socket connected successfully
           });
 
           newSocket.on("disconnect", () => {
-            console.log("[NotificationProvider] Socket disconnected");
+            // Socket disconnected
           });
 
           newSocket.on("error", (error: any) => {
@@ -100,17 +96,9 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
           });
 
           newSocket.emit("join", userData._id);
-          console.log(
-            "[NotificationProvider] Emitted join for user:",
-            userData._id
-          );
 
           // Listen for notifications
           newSocket.on("notification", (notificationData: NotificationData) => {
-            console.log(
-              "[NotificationProvider] Received notification:",
-              notificationData
-            );
             setNotifications((prev) => [...prev, notificationData]);
             refreshUnreadCount();
 
@@ -173,10 +161,9 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       audio.volume = 0.3;
       audio.play().catch(() => {
         // Fallback to system beep or silent fail
-        console.log("Could not play notification sound");
       });
     } catch (error) {
-      console.log("Audio not available");
+      // Audio not available
     }
   };
 
@@ -194,9 +181,6 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
 
   const refreshUnreadCount = async () => {
     if (!session?.user) {
-      console.log(
-        "[NotificationProvider] No session, skipping unread count refresh"
-      );
       setUnreadCount(0);
       setUnreadBySender([]);
       return;
@@ -206,7 +190,6 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       const response = await fetch("/api/notifications/unread");
       if (response.ok) {
         const data = await response.json();
-        console.log("[NotificationProvider] Unread count data:", data);
         setUnreadCount(data.totalUnread);
         setUnreadBySender(data.unreadBySender);
       } else {

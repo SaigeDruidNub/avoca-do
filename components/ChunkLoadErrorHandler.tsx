@@ -24,7 +24,6 @@ if (typeof window !== "undefined") {
 
       // Try to reload the page after a short delay
       setTimeout(() => {
-        console.log("Attempting page reload due to chunk loading error...");
         window.location.reload();
       }, 1000);
     }
@@ -47,9 +46,6 @@ if (typeof window !== "undefined") {
 
       // Try to reload the page
       setTimeout(() => {
-        console.log(
-          "Attempting page reload due to chunk loading promise rejection..."
-        );
         window.location.reload();
       }, 1000);
     }

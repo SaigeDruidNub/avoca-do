@@ -28,13 +28,6 @@ export async function GET(req: NextRequest) {
   const radius = parseFloat(searchParams.get("radius") || "10");
   const interest = searchParams.get("interest") || "";
 
-  console.log("Suggested API called with:", {
-    lat,
-    lng,
-    radius,
-    userEmail: session?.user?.email,
-  });
-
   // Find current user and get exclude IDs
   const userEmail = session?.user?.email;
   let excludeIds: string[] = [];
@@ -42,9 +35,6 @@ export async function GET(req: NextRequest) {
 
   if (userEmail) {
     currentUser = await User.findOne({ email: userEmail }).lean();
-    console.log("Current user found:", currentUser ? "Yes" : "No");
-    console.log("Current user interests:", currentUser?.interests);
-    console.log("Current user locationShared:", currentUser?.locationShared);
 
     // Defensive: if currentUser is an array, use first element
     if (Array.isArray(currentUser)) currentUser = currentUser[0];
@@ -66,7 +56,6 @@ export async function GET(req: NextRequest) {
       Array.isArray(currentUser.blocked)
     ) {
       excludeIds.push(...currentUser.blocked.map(String));
-      console.log("Excluding blocked users:", currentUser.blocked);
     }
 
     // Find and exclude users who have blocked the current user
@@ -79,11 +68,8 @@ export async function GET(req: NextRequest) {
 
       const blockedByIds = usersWhoBlockedMe.map((u) => String(u._id));
       excludeIds.push(...blockedByIds);
-      console.log("Excluding users who blocked current user:", blockedByIds);
     }
   }
-
-  console.log("Exclude IDs:", excludeIds);
 
   let locationBasedUsers: any[] = [];
   let interestBasedUsers: any[] = [];
@@ -91,7 +77,6 @@ export async function GET(req: NextRequest) {
   // 1. Try location-based matching first (for users who have shared location)
   if (lat !== 0 || lng !== 0) {
     try {
-      console.log("Attempting location-based search...");
       const query: any = {
         $and: [
           {
@@ -119,9 +104,7 @@ export async function GET(req: NextRequest) {
         query.interests = { $in: [interest] };
       }
       locationBasedUsers = await User.find(query).lean();
-      console.log("Location-based users found:", locationBasedUsers.length);
     } catch (error) {
-      console.log("Location-based search failed:", error);
       locationBasedUsers = [];
     }
   }
@@ -133,11 +116,6 @@ export async function GET(req: NextRequest) {
     Array.isArray(currentUser.interests) &&
     currentUser.interests.length > 0
   ) {
-    console.log(
-      "Searching for interest-based matches with interests:",
-      currentUser.interests
-    );
-
     interestBasedUsers = await User.find({
       interests: { $in: currentUser.interests },
       $or: [
@@ -157,12 +135,6 @@ export async function GET(req: NextRequest) {
       })
       .filter((u) => u.sharedInterests.length > 0)
       .sort((a, b) => b.sharedInterests.length - a.sharedInterests.length);
-
-    console.log("Interest-based users found:", interestBasedUsers.length);
-  } else {
-    console.log(
-      "No interest-based search - user has no interests or not found"
-    );
   }
 
   // 3. Combine and format results
@@ -202,7 +174,6 @@ export async function GET(req: NextRequest) {
 
   // 6. Fallback: if no results found, get some random users (excluding friends and self)
   if (suggested.length === 0 && userEmail) {
-    console.log("No matches found, falling back to random users...");
     try {
       const fallbackUsers = await User.find({
         $or: [
@@ -222,18 +193,8 @@ export async function GET(req: NextRequest) {
       }));
 
       suggested = fallbackResults;
-      console.log("Fallback users found:", fallbackResults.length);
-    } catch (error) {
-      console.log("Fallback search failed:", error);
-    }
+    } catch (error) {}
   }
-
-  console.log("Final results:", {
-    locationResults: locationResults.length,
-    interestResults: interestResults.length,
-    uniqueInterestResults: uniqueInterestResults.length,
-    totalSuggested: suggested.length,
-  });
 
   return NextResponse.json(suggested);
 }

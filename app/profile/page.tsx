@@ -30,7 +30,6 @@ export default function MyProfilePageWrapper() {
     const res = await fetch("/api/user/me");
     if (res.ok) {
       const data = await res.json();
-      console.log("Fetched profile data:", data);
       setProfile((prev) => ({ ...prev, ...data }));
       setImagePreview(data.image || null);
     } else if (res.status === 401) {

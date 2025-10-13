@@ -31,8 +31,6 @@ export async function GET() {
       format: "text",
     });
 
-    console.log("🧪 Testing Google Translate API...");
-
     const response = await fetch(`${url}?${params.toString()}`, {
       method: "POST",
       headers: {
@@ -59,7 +57,6 @@ export async function GET() {
     }
 
     const data = JSON.parse(responseData);
-    console.log("✅ API test successful:", data);
 
     return NextResponse.json({
       status: "success",
@@ -128,19 +125,12 @@ export async function POST(request: NextRequest) {
       params.append("source", sourceLanguage);
     }
 
-    console.log(
-      "🌍 Making translation request to:",
-      `${url}?${params.toString()}`
-    );
-
     const response = await fetch(`${url}?${params.toString()}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
     });
-
-    console.log("🌍 Translation API response status:", response.status);
 
     if (!response.ok) {
       const errorData = await response.text();
@@ -255,19 +245,12 @@ export async function PUT(request: NextRequest) {
       params.append("source", sourceLanguage);
     }
 
-    console.log(
-      "🌍 Making batch translation request to:",
-      `${url}?${params.toString()}`
-    );
-
     const response = await fetch(`${url}?${params.toString()}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
     });
-
-    console.log("🌍 Batch translation API response status:", response.status);
 
     if (!response.ok) {
       const errorData = await response.text();
