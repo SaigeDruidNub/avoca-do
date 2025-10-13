@@ -34,5 +34,15 @@
   "common": {
     "clear": "Effacer",
     "copy": "Copier"
+  },
+  "welcome": {
+    "title": "Bienvenue sur Avoca-do ! 🥑",
+    "personalGreeting": "Salut {name} ! Bienvenue sur Avoca-do !",
+    "genericGreeting": "Bienvenue sur Avoca-do !",
+    "howItWorks": "Comment Trouver Vos Autres Moitiés",
+    "explanation": "Avoca-do vous aide à vous connecter avec des personnes qui partagent vos intérêts et passions. Pour commencer à découvrir vos correspondances parfaites et créer des connexions significatives, vous devez nous parler de vos passions !",
+    "getStarted": "Prêt à commencer ?",
+    "selectInterests": "Sélectionnez Vos Intérêts",
+    "footerNote": "Une fois que vous avez sélectionné vos intérêts, vous commencerez à voir des autres moitiés suggérées et pourrez vous connecter avec des personnes formidables qui partagent vos passions !"
   }
 }

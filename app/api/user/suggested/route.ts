@@ -93,7 +93,20 @@ export async function GET(req: NextRequest) {
     try {
       console.log("Attempting location-based search...");
       const query: any = {
-        $or: [{ locationShared: true }, { locationShared: { $exists: false } }],
+        $and: [
+          {
+            $or: [
+              { locationShared: true },
+              { locationShared: { $exists: false } },
+            ],
+          },
+          {
+            $or: [
+              { "privacy.onlyDiscoverableByEmail": { $exists: false } },
+              { "privacy.onlyDiscoverableByEmail": false },
+            ],
+          },
+        ],
         location: {
           $nearSphere: {
             $geometry: { type: "Point", coordinates: [lng, lat] },
@@ -127,6 +140,10 @@ export async function GET(req: NextRequest) {
 
     interestBasedUsers = await User.find({
       interests: { $in: currentUser.interests },
+      $or: [
+        { "privacy.onlyDiscoverableByEmail": { $exists: false } },
+        { "privacy.onlyDiscoverableByEmail": false },
+      ],
       ...(excludeIds.length > 0 ? { _id: { $nin: excludeIds } } : {}),
     }).lean();
 
@@ -188,6 +205,10 @@ export async function GET(req: NextRequest) {
     console.log("No matches found, falling back to random users...");
     try {
       const fallbackUsers = await User.find({
+        $or: [
+          { "privacy.onlyDiscoverableByEmail": { $exists: false } },
+          { "privacy.onlyDiscoverableByEmail": false },
+        ],
         ...(excludeIds.length > 0 ? { _id: { $nin: excludeIds } } : {}),
       })
         .limit(5)

@@ -34,5 +34,15 @@
   "common": {
     "clear": "クリア",
     "copy": "コピー"
+  },
+  "welcome": {
+    "title": "Avoca-doへようこそ！🥑",
+    "personalGreeting": "こんにちは{name}さん！Avoca-doへようこそ！",
+    "genericGreeting": "Avoca-doへようこそ！",
+    "howItWorks": "あなたの他の半分を見つける方法",
+    "explanation": "Avoca-doは、あなたの興味や情熱を共有する志を同じくする人々とつながることを支援します。完璧なマッチを発見し、意味のあるつながりを築き始めるには、あなたの情熱について教えてください！",
+    "getStarted": "始める準備はできましたか？",
+    "selectInterests": "興味を選択する",
+    "footerNote": "興味を選択すると、おすすめの他の半分が表示され始め、あなたの情熱を共有する素晴らしい人々とつながることができます！"
   }
 }

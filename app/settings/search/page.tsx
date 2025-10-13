@@ -137,7 +137,8 @@ export default function UserSearchPage() {
         <ul className="space-y-1 text-sm text-secondary/80">
           <li>• Search by full name or partial name matches</li>
           <li>
-            • You can still search by email, but emails won't be displayed
+            • Enter a complete email address to search by email (emails won't be
+            displayed)
           </li>
           <li>• You won't see users you've blocked or who have blocked you</li>
           <li>• Click on any result to view their profile</li>

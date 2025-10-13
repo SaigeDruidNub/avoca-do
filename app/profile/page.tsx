@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 // Removed unused imports
 
 import Link from "next/link";
+import UserAvatar from "../../components/UserAvatar";
 
 export default function MyProfilePageWrapper() {
   const [editMode, setEditMode] = useState(false);
@@ -153,15 +154,11 @@ export default function MyProfilePageWrapper() {
                   key={f._id}
                   className="flex items-center gap-3 bg-primary rounded p-2"
                 >
-                  <img
-                    src={f.image || "/logo.png"}
+                  <UserAvatar
+                    src={f.image}
                     alt={f.name || f.email}
-                    className="w-8 h-8 rounded-full border border-gray-300"
-                    onError={(e) => {
-                      e.currentTarget.src = "/logo.png";
-                    }}
-                    referrerPolicy="no-referrer"
-                    crossOrigin="anonymous"
+                    size="sm"
+                    userId={f._id}
                   />
                   <span className="font-medium text-primary-dark">
                     {f.name || f.email}
@@ -174,16 +171,12 @@ export default function MyProfilePageWrapper() {
         <h1 className="text-3xl font-bold text-primary mb-2">
           {profile.name || "My Profile"}
         </h1>
-        <img
-          src={
-            imagePreview ||
-            profile.image ||
-            `https://robohash.org/${encodeURIComponent(
-              profile.name || profile.email || "user"
-            )}?set=set4&size=160x160`
-          }
+        <UserAvatar
+          src={imagePreview || profile.image}
           alt={profile.name || "User avatar"}
-          className="w-24 h-24 rounded-full border border-gray-300 mb-4"
+          size="xl"
+          userId={profile.email}
+          className="mb-4"
         />
         {!editMode && (
           <>

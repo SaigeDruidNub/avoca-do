@@ -134,3 +134,83 @@ export async function POST(req: NextRequest) {
   });
   return NextResponse.json(post);
 }
+
+// PUT: update a post (only by the creator)
+export async function PUT(req: NextRequest) {
+  await dbConnect();
+  const session = await getServerSession();
+  if (!session || !session.user?.email) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { postId, message } = await req.json();
+  if (!postId || !message) {
+    return NextResponse.json(
+      { error: "Missing postId or message" },
+      { status: 400 }
+    );
+  }
+
+  // Find user to get _id
+  const UserModel = (await import("@/models/User")).default;
+  const user = await UserModel.findOne({ email: session.user.email });
+  if (!user) {
+    return NextResponse.json({ error: "User not found" }, { status: 404 });
+  }
+
+  // Find the post and verify ownership
+  const post = await Post.findById(postId);
+  if (!post) {
+    return NextResponse.json({ error: "Post not found" }, { status: 404 });
+  }
+
+  if (post.userId !== user._id.toString()) {
+    return NextResponse.json(
+      { error: "You can only edit your own posts" },
+      { status: 403 }
+    );
+  }
+
+  // Update the post
+  await Post.findByIdAndUpdate(postId, { message, updatedAt: new Date() });
+  return NextResponse.json({ success: true });
+}
+
+// DELETE: delete a post (only by the creator)
+export async function DELETE(req: NextRequest) {
+  await dbConnect();
+  const session = await getServerSession();
+  if (!session || !session.user?.email) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(req.url);
+  const postId = searchParams.get("postId");
+  if (!postId) {
+    return NextResponse.json({ error: "Missing postId" }, { status: 400 });
+  }
+
+  // Find user to get _id
+  const UserModel = (await import("@/models/User")).default;
+  const user = await UserModel.findOne({ email: session.user.email });
+  if (!user) {
+    return NextResponse.json({ error: "User not found" }, { status: 404 });
+  }
+
+  // Find the post and verify ownership
+  const post = await Post.findById(postId);
+  if (!post) {
+    return NextResponse.json({ error: "Post not found" }, { status: 404 });
+  }
+
+  if (post.userId !== user._id.toString()) {
+    return NextResponse.json(
+      { error: "You can only delete your own posts" },
+      { status: 403 }
+    );
+  }
+
+  // Delete the post
+  await Post.findByIdAndDelete(postId);
+  return NextResponse.json({ success: true });
+}

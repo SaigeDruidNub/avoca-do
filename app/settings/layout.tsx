@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
+import UserAvatar from "../../components/UserAvatar";
 
 export default function SettingsLayout({
   children,
@@ -16,6 +17,7 @@ export default function SettingsLayout({
 
   const navigationItems = [
     { href: "/settings", label: "General", exact: true },
+    { href: "/settings/privacy", label: "Privacy", exact: false },
     { href: "/settings/interests", label: "Interests", exact: false },
     { href: "/settings/otherhalves", label: "Other Halves", exact: false },
     { href: "/settings/blocked", label: "Rotten List", exact: false },
@@ -52,13 +54,13 @@ export default function SettingsLayout({
           >
             Dashboard
           </Link>
-          {session?.user?.image && (
-            <Image
+          {session?.user && (
+            <UserAvatar
               src={session.user.image}
               alt="User avatar"
-              width={40}
-              height={40}
-              className="w-10 h-10 rounded-full border border-gray-300 shadow"
+              size="md"
+              userId={session.user.email || undefined}
+              className="shadow"
             />
           )}
         </div>

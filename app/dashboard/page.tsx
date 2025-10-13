@@ -1,7 +1,13 @@
 // Use email as unique user identifier for likes/dislikes
 "use client";
-import React, { useState, useEffect as useReactEffect } from "react";
+import React, {
+  useState,
+  useEffect as useReactEffect,
+  Suspense,
+  lazy,
+} from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import {
   FaThumbsUp,
   FaThumbsDown,
@@ -13,10 +19,66 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useTranslation } from "../../components/LanguageProvider";
-import LanguageSwitcher from "../../components/LanguageSwitcher";
-import { NotificationDot } from "../../components/NotificationBadge";
-import EmojiPicker from "../../components/EmojiPicker";
-import GifPicker from "../../components/GifPicker";
+import { useTranslateContent } from "../../hooks/useTranslateContent";
+
+// Dynamically import heavy components to prevent chunk loading issues
+const LanguageSwitcher = dynamic(
+  () => import("../../components/LanguageSwitcher"),
+  {
+    loading: () => (
+      <div className="w-6 h-6 bg-gray-200 rounded animate-pulse" />
+    ),
+  }
+);
+
+const NotificationDot = dynamic(
+  () =>
+    import("../../components/NotificationBadge").then((mod) => ({
+      default: mod.NotificationDot,
+    })),
+  {
+    loading: () => <span />,
+  }
+);
+
+const EmojiPicker = dynamic(() => import("../../components/EmojiPicker"), {
+  loading: () => (
+    <div className="w-64 h-32 bg-gray-200 rounded animate-pulse" />
+  ),
+  ssr: false,
+});
+
+const GifPicker = dynamic(() => import("../../components/GifPicker"), {
+  loading: () => (
+    <div className="w-64 h-32 bg-gray-200 rounded animate-pulse" />
+  ),
+  ssr: false,
+});
+
+const UserAvatar = dynamic(() => import("../../components/UserAvatar"), {
+  loading: () => (
+    <div className="w-12 h-12 bg-gray-200 rounded-full animate-pulse" />
+  ),
+});
+
+const PostActions = dynamic(() => import("../../components/PostActions"), {
+  loading: () => <div className="w-8 h-8 bg-gray-200 rounded animate-pulse" />,
+});
+
+const CommentActions = dynamic(
+  () => import("../../components/CommentActions"),
+  {
+    loading: () => (
+      <div className="w-8 h-8 bg-gray-200 rounded animate-pulse" />
+    ),
+  }
+);
+
+const WelcomePost = dynamic(() => import("../../components/WelcomePost"), {
+  loading: () => (
+    <div className="w-full h-32 bg-gray-200 rounded animate-pulse" />
+  ),
+});
 
 export default function DashboardPage() {
   // Mobile menu state
@@ -26,6 +88,8 @@ export default function DashboardPage() {
     require("../../components/NotificationProvider").useNotifications();
 
   const { t } = useTranslation();
+  const { translatePosts, isEnabled: isTranslationEnabled } =
+    useTranslateContent();
 
   // Helper function to generate RoboHash cat avatar
   const getRoboHashAvatar = (identifier: string) => {
@@ -143,6 +207,11 @@ export default function DashboardPage() {
   );
   const [showPostGifPicker, setShowPostGifPicker] = useState(false);
   const [postGifUrl, setPostGifUrl] = useState("");
+  // Edit state for posts and comments
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editPostText, setEditPostText] = useState("");
+  const [editCommentText, setEditCommentText] = useState("");
 
   // Post submit handler
   async function handlePostSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -170,7 +239,7 @@ export default function DashboardPage() {
       setPostInput("");
       setPostGifUrl("");
       // Refresh posts
-      fetchPosts();
+      await fetchPosts();
     } catch {
       setPostError("Failed to post");
     } finally {
@@ -208,6 +277,19 @@ export default function DashboardPage() {
           }
         } else {
           setUserMap(null);
+        }
+
+        // Trigger translation after posts are loaded and rendered
+        if (isTranslationEnabled && Array.isArray(data) && data.length > 0) {
+          console.log(
+            "🔧 Dashboard: Triggering translation for",
+            data.length,
+            "posts"
+          );
+          // Use setTimeout to ensure DOM is updated after state change
+          setTimeout(() => {
+            translatePosts();
+          }, 100);
         }
       } else {
         setPosts([]);
@@ -407,13 +489,12 @@ export default function DashboardPage() {
     );
   }
 
+  // Declare userId for all post interactions (use MongoDB _id for posts, email for comments)
+  const userId = session?.user?.email || "";
+  const userMongoId = userProfile?._id || "";
+
   return (
     <main className="flex min-h-screen flex-col bg-primary">
-      {/* Declare userId once for all post interactions */}
-      {(() => {
-        var userId = session?.user?.email || "";
-        return null;
-      })()}
       {/* Header with logo and user image */}
       <header className="w-full flex flex-col md:flex-row justify-between items-center p-4 bg-primary shadow-sm">
         <div className="flex items-center w-full md:w-auto justify-between">
@@ -460,15 +541,12 @@ export default function DashboardPage() {
           </Link>
           {userProfile && (
             <Link href="/profile" className="flex items-center gap-2 group">
-              <img
-                src={userProfile.image || "/logo.png"}
+              <UserAvatar
+                src={userProfile.image}
                 alt="User avatar"
-                className="w-10 h-10 rounded-full border border-gray-300 shadow group-hover:opacity-80 transition"
-                onError={(e) => {
-                  e.currentTarget.src = "/logo.png";
-                }}
-                referrerPolicy="no-referrer"
-                crossOrigin="anonymous"
+                size="md"
+                userId={userProfile._id}
+                className="shadow group-hover:opacity-80 transition"
               />
               <span className="text-foreground font-medium text-base group-hover:underline">
                 {userProfile.name || t("dashboard.profile")}
@@ -503,15 +581,12 @@ export default function DashboardPage() {
             </Link>
             {userProfile && (
               <Link href="/profile" className="flex items-center gap-2 group">
-                <img
-                  src={userProfile.image || "/logo.png"}
+                <UserAvatar
+                  src={userProfile.image}
                   alt="User avatar"
-                  className="w-10 h-10 rounded-full border border-gray-300 shadow group-hover:opacity-80 transition"
-                  onError={(e) => {
-                    e.currentTarget.src = "/logo.png";
-                  }}
-                  referrerPolicy="no-referrer"
-                  crossOrigin="anonymous"
+                  size="md"
+                  userId={userProfile._id}
+                  className="shadow group-hover:opacity-80 transition"
                 />
                 <span className="text-foreground font-medium text-base group-hover:underline">
                   {userProfile.name || t("dashboard.profile")}
@@ -557,34 +632,11 @@ export default function DashboardPage() {
               <ul className="space-y-4">
                 {friends.map((friend) => (
                   <li key={friend._id} className="flex items-center gap-4">
-                    <img
-                      src={friend.image || getRoboHashAvatar(friend._id)}
+                    <UserAvatar
+                      src={friend.image}
                       alt={friend.name || "Other Half"}
-                      className="w-12 h-12 rounded-full border border-gray-300 object-cover"
-                      onError={(e) => {
-                        console.log(
-                          `Failed to load friend image for ${friend.name}:`,
-                          friend.image
-                        );
-                        // Try to fix Google image URL
-                        const currentSrc = e.currentTarget.src;
-                        if (
-                          currentSrc.includes("googleusercontent.com") &&
-                          !currentSrc.includes("referrer")
-                        ) {
-                          const newUrl = friend.image?.replace(
-                            "=s96-c",
-                            "=s96-c-rp-mo-br100"
-                          );
-                          if (newUrl && newUrl !== currentSrc) {
-                            e.currentTarget.src = newUrl;
-                            return;
-                          }
-                        }
-                        e.currentTarget.src = getRoboHashAvatar(friend._id);
-                      }}
-                      referrerPolicy="no-referrer"
-                      crossOrigin="anonymous"
+                      size="lg"
+                      userId={friend._id}
                     />
                     <div>
                       <Link
@@ -745,30 +797,11 @@ export default function DashboardPage() {
                     // ...existing code for rendering user card...
                     return (
                       <li key={user._id} className="flex items-center gap-4">
-                        <img
-                          src={user.image || getRoboHashAvatar(user._id)}
+                        <UserAvatar
+                          src={user.image}
                           alt={user.name || "User"}
-                          className="w-12 h-12 rounded-full border border-gray-300"
-                          onError={(e) => {
-                            // ...existing error handling...
-                            const currentSrc = e.currentTarget.src;
-                            if (
-                              currentSrc.includes("googleusercontent.com") &&
-                              !currentSrc.includes("referrer")
-                            ) {
-                              const newUrl = user.image?.replace(
-                                "=s96-c",
-                                "=s96-c-rp-mo-br100"
-                              );
-                              if (newUrl && newUrl !== currentSrc) {
-                                e.currentTarget.src = newUrl;
-                                return;
-                              }
-                            }
-                            e.currentTarget.src = getRoboHashAvatar(user._id);
-                          }}
-                          referrerPolicy="no-referrer"
-                          crossOrigin="anonymous"
+                          size="lg"
+                          userId={user._id}
                         />
                         <div>
                           <Link
@@ -909,11 +942,17 @@ export default function DashboardPage() {
               )}
             </form>
           </div>
-          {/* ...removed Other Halves' Feed section (now merged with main feed)... */}
+
+          {/* Welcome Post for New Users */}
+          {userProfile &&
+            Array.isArray(userProfile.interests) &&
+            userProfile.interests.length === 0 && (
+              <WelcomePost userName={userProfile.name} />
+            )}
 
           {/* Media Feed List */}
           {/* Declare userId once for all post interactions */}
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4" data-posts-container>
             {loadingPosts ? (
               <div className="text-primary-dark">
                 {t("dashboard.loadingFeed")}
@@ -922,7 +961,6 @@ export default function DashboardPage() {
               <div className="text-primary-dark">{t("dashboard.noPosts")}</div>
             ) : (
               posts.map((post) => {
-                const userId = session?.user?.email || "";
                 const user = userMap?.[post.userId];
                 // Like/dislike helpers
                 const liked = post.likes?.includes(userId);
@@ -1003,9 +1041,119 @@ export default function DashboardPage() {
                     });
                     setCommentInputs((prev) => ({ ...prev, [postId]: "" }));
                     setCommentGifUrls((prev) => ({ ...prev, [postId]: "" }));
-                    fetchPosts();
+                    await fetchPosts();
                   } finally {
                     setCommentLoading(null);
+                  }
+                };
+
+                // Post edit/delete handlers
+                const handleEditPost = (
+                  postId: string,
+                  currentMessage: string
+                ) => {
+                  setEditingPostId(postId);
+                  setEditPostText(currentMessage);
+                };
+
+                const handleSavePostEdit = async (postId: string) => {
+                  try {
+                    const res = await fetch(`/api/feed`, {
+                      method: "PUT",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        postId,
+                        message: editPostText,
+                      }),
+                    });
+                    if (res.ok) {
+                      setEditingPostId(null);
+                      setEditPostText("");
+                      fetchPosts();
+                    }
+                  } catch (error) {
+                    console.error("Failed to update post:", error);
+                  }
+                };
+
+                const handleCancelPostEdit = () => {
+                  setEditingPostId(null);
+                  setEditPostText("");
+                };
+
+                const handleDeletePost = async (postId: string) => {
+                  if (confirm("Are you sure you want to delete this post?")) {
+                    try {
+                      const res = await fetch(`/api/feed?postId=${postId}`, {
+                        method: "DELETE",
+                      });
+                      if (res.ok) {
+                        fetchPosts();
+                      }
+                    } catch (error) {
+                      console.error("Failed to delete post:", error);
+                    }
+                  }
+                };
+
+                // Comment edit/delete handlers
+                const handleEditComment = (
+                  commentId: string,
+                  currentMessage: string
+                ) => {
+                  setEditingCommentId(commentId);
+                  setEditCommentText(currentMessage);
+                };
+
+                const handleSaveCommentEdit = async (
+                  postId: string,
+                  commentId: string
+                ) => {
+                  try {
+                    const res = await fetch(`/api/feed/comment`, {
+                      method: "PUT",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        postId,
+                        commentId,
+                        message: editCommentText,
+                      }),
+                    });
+                    if (res.ok) {
+                      setEditingCommentId(null);
+                      setEditCommentText("");
+                      fetchPosts();
+                    }
+                  } catch (error) {
+                    console.error("Failed to update comment:", error);
+                  }
+                };
+
+                const handleCancelCommentEdit = () => {
+                  setEditingCommentId(null);
+                  setEditCommentText("");
+                };
+
+                const handleDeleteComment = async (
+                  postId: string,
+                  commentId: string
+                ) => {
+                  if (
+                    confirm("Are you sure you want to delete this comment?")
+                  ) {
+                    try {
+                      const res = await fetch(
+                        `/api/feed/comment?postId=${postId}&commentId=${commentId}`,
+                        {
+                          method: "DELETE",
+                        }
+                      );
+                      if (res.ok) {
+                        fetchPosts();
+                      }
+                    } catch (error) {
+                      console.error("Failed to delete comment:", error);
+                    }
                   }
                 };
 
@@ -1014,28 +1162,61 @@ export default function DashboardPage() {
                     key={post._id}
                     className="bg-primary-dark rounded-lg shadow p-4 flex flex-col w-full gap-2"
                   >
-                    <img
+                    <UserAvatar
                       src={
                         user?.image && user?.image.trim() !== ""
                           ? user.image
                           : post.userImage && post.userImage.trim() !== ""
                           ? post.userImage
-                          : getRoboHashAvatar(post.userId)
+                          : undefined
                       }
                       alt={user?.name || post.userName || "User"}
-                      className="w-12 h-12 rounded-full border border-gray-300 object-cover mb-2"
-                      onError={(e) => {
-                        e.currentTarget.src = getRoboHashAvatar(post.userId);
-                      }}
+                      size="lg"
+                      userId={post.userId}
+                      className="mb-2"
                     />
                     <div className="w-full">
-                      <div className="font-bold text-secondary-dark break-words w-full">
-                        {user?.name || post.userName || t("dashboard.user")}
+                      <div className="flex justify-between items-center mb-2">
+                        <div className="font-bold text-secondary-dark break-words">
+                          {user?.name || post.userName || t("dashboard.user")}
+                        </div>
+                        <PostActions
+                          onEdit={() =>
+                            handleEditPost(post._id, post.message || "")
+                          }
+                          onDelete={() => handleDeletePost(post._id)}
+                          isOwner={post.userId === userMongoId}
+                        />
                       </div>
                       <div className="text-primary mb-2 break-words">
-                        <div className="text-primary mb-2 break-words w-full">
-                          {post.message}
-                        </div>
+                        {editingPostId === post._id ? (
+                          <div className="mb-2">
+                            <textarea
+                              value={editPostText}
+                              onChange={(e) => setEditPostText(e.target.value)}
+                              className="w-full border border-gray-300 rounded px-2 py-1 text-secondary"
+                              rows={3}
+                            />
+                            <div className="flex gap-2 mt-2">
+                              <button
+                                onClick={() => handleSavePostEdit(post._id)}
+                                className="bg-primary text-white px-3 py-1 rounded text-sm hover:bg-primary-dark"
+                              >
+                                Save
+                              </button>
+                              <button
+                                onClick={handleCancelPostEdit}
+                                className="bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-400"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-primary mb-2 break-words w-full">
+                            {post.message}
+                          </div>
+                        )}
                         {/* Render GIF if present in post */}
                         {post.gifUrl && post.gifUrl.length > 0 && (
                           <img
@@ -1094,27 +1275,78 @@ export default function DashboardPage() {
                                   key={comment._id}
                                   className="text-sm bg-primary-dark rounded p-2 border border-primary w-full break-words"
                                 >
-                                  <span className="font-bold text-secondary-dark">
-                                    {comment.userName || comment.userId}:
-                                  </span>{" "}
-                                  <span className="text-primary">
-                                    {comment.message}
-                                  </span>
-                                  {comment.gifUrl &&
-                                    comment.gifUrl.length > 0 && (
-                                      <img
-                                        src={comment.gifUrl}
-                                        alt="GIF"
-                                        className="w-full max-w-xs max-h-32 rounded border mt-2 object-cover"
-                                      />
-                                    )}
-                                  <span className="text-xs text-gray-500 ml-2">
-                                    {comment.createdAt
-                                      ? new Date(
-                                          comment.createdAt
-                                        ).toLocaleString()
-                                      : ""}
-                                  </span>
+                                  <div className="flex justify-between items-start">
+                                    <div className="flex-1">
+                                      <span className="font-bold text-secondary-dark">
+                                        {comment.userName || comment.userId}:
+                                      </span>{" "}
+                                      {editingCommentId === comment._id ? (
+                                        <div className="mt-1">
+                                          <textarea
+                                            value={editCommentText}
+                                            onChange={(e) =>
+                                              setEditCommentText(e.target.value)
+                                            }
+                                            className="w-full border border-gray-300 rounded px-2 py-1 text-secondary text-sm"
+                                            rows={2}
+                                          />
+                                          <div className="flex gap-2 mt-1">
+                                            <button
+                                              onClick={() =>
+                                                handleSaveCommentEdit(
+                                                  post._id,
+                                                  comment._id
+                                                )
+                                              }
+                                              className="bg-primary text-white px-2 py-1 rounded text-xs hover:bg-primary-dark"
+                                            >
+                                              Save
+                                            </button>
+                                            <button
+                                              onClick={handleCancelCommentEdit}
+                                              className="bg-gray-300 text-gray-700 px-2 py-1 rounded text-xs hover:bg-gray-400"
+                                            >
+                                              Cancel
+                                            </button>
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <span className="text-primary">
+                                          {comment.message}
+                                        </span>
+                                      )}
+                                      {comment.gifUrl &&
+                                        comment.gifUrl.length > 0 && (
+                                          <img
+                                            src={comment.gifUrl}
+                                            alt="GIF"
+                                            className="w-full max-w-xs max-h-32 rounded border mt-2 object-cover"
+                                          />
+                                        )}
+                                      <span className="text-xs text-gray-500 ml-2">
+                                        {comment.createdAt
+                                          ? new Date(
+                                              comment.createdAt
+                                            ).toLocaleString()
+                                          : ""}
+                                      </span>
+                                    </div>
+                                    <CommentActions
+                                      onEdit={() =>
+                                        handleEditComment(
+                                          comment._id,
+                                          comment.message
+                                        )
+                                      }
+                                      onDelete={() =>
+                                        handleDeleteComment(
+                                          post._id,
+                                          comment._id
+                                        )
+                                      }
+                                      isOwner={comment.userId === userId}
+                                    />
+                                  </div>
                                 </li>
                               ))
                             ) : (

@@ -27,7 +27,14 @@ export default function SettingsPage() {
       description:
         "View and manage your other halves (friends). You can view their profiles or remove them from your list.",
       href: "/settings/otherhalves",
-      icon: "💕",
+      icon: "🥑",
+    },
+    {
+      title: "Privacy",
+      description:
+        "Control your discoverability and privacy settings. Choose who can find you and how they can contact you.",
+      href: "/settings/privacy",
+      icon: "🔒",
     },
     {
       title: "Rotten List",

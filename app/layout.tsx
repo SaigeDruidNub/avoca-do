@@ -4,6 +4,9 @@ import "./globals.css";
 import AuthProvider from "./AuthProvider";
 import { LanguageProvider } from "../components/LanguageProvider";
 import { NotificationProvider } from "../components/NotificationProvider";
+import { AutoTranslationProvider } from "../components/AutoTranslationProvider";
+import AutoTranslator from "../components/AutoTranslator";
+import ChunkLoadErrorHandler from "../components/ChunkLoadErrorHandler";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,9 +34,15 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <LanguageProvider>
-          <AuthProvider>
-            <NotificationProvider>{children}</NotificationProvider>
-          </AuthProvider>
+          <AutoTranslationProvider>
+            <AuthProvider>
+              <NotificationProvider>
+                <ChunkLoadErrorHandler />
+                <AutoTranslator />
+                {children}
+              </NotificationProvider>
+            </AuthProvider>
+          </AutoTranslationProvider>
         </LanguageProvider>
       </body>
     </html>

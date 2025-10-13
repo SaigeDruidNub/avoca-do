@@ -221,15 +221,13 @@ export default function ChatPage() {
         </a>
         <h1 className="text-2xl font-bold text-foreground">Chat</h1>
       </div>
-      <form
-        className="mb-4 flex flex-col sm:flex-row gap-2 relative w-full max-w-md"
-        onSubmit={sendMessage}
-      >
+      {/* Recipient selector */}
+      <div className="mb-4 w-full max-w-md">
         {error && <div className="text-red-600 text-sm mb-2">{error}</div>}
         <select
           value={recipient}
           onChange={(e) => setRecipient(e.target.value)}
-          className="bg-primary-dark text-secondary border rounded px-2 py-2 w-full sm:w-auto"
+          className="bg-primary-dark text-secondary border rounded px-2 py-2 w-full"
         >
           <option value="">Select Recipient</option>
           {allUsers.map((user) => {
@@ -242,50 +240,11 @@ export default function ChatPage() {
             );
           })}
         </select>
-        <input
-          type="text"
-          placeholder="Type a message..."
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          className="bg-primary-dark text-secondary placeholder:text-secondary/70 border rounded px-2 py-2 flex-1 min-w-0"
-        />
-        <div className="flex gap-2 mt-2 sm:mt-0">
-          <button
-            type="button"
-            className="bg-yellow-400 text-black px-3 py-2 rounded text-lg"
-            onClick={() => setShowEmojiPicker((v) => !v)}
-            title="Add emoji"
-          >
-            😊
-          </button>
-          <button
-            type="button"
-            className="bg-blue-400 text-white px-3 py-2 rounded text-base"
-            onClick={() => setShowGifPicker((v) => !v)}
-            title="Add GIF"
-          >
-            GIF
-          </button>
-          <button
-            type="submit"
-            className="bg-accent text-white px-4 py-2 rounded text-base"
-          >
-            Send
-          </button>
-        </div>
-        {showEmojiPicker && (
-          <div style={{ position: "absolute", top: "100%", left: 0 }}>
-            <EmojiPicker onSelect={handleEmojiSelect} />
-          </div>
-        )}
-        {showGifPicker && (
-          <div style={{ position: "absolute", top: "100%", right: 0 }}>
-            <GifPicker onSelect={handleGifSelect} />
-          </div>
-        )}
-      </form>
+      </div>
+
+      {/* Messages container */}
       <div
-        className="w-full max-w-md bg-primary-dark rounded shadow p-2 sm:p-4 flex flex-col gap-2 overflow-y-auto"
+        className="w-full max-w-md bg-primary-dark rounded shadow p-2 sm:p-4 flex flex-col gap-2 overflow-y-auto mb-4"
         style={{ height: "60vh", minHeight: 240 }}
       >
         {loadingHistory ? (
@@ -342,6 +301,54 @@ export default function ChatPage() {
         )}
         <div ref={messagesEndRef} />
       </div>
+
+      {/* Message input form at the bottom */}
+      <form
+        className="flex flex-col sm:flex-row gap-2 relative w-full max-w-md"
+        onSubmit={sendMessage}
+      >
+        <input
+          type="text"
+          placeholder="Type a message..."
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          className="bg-primary-dark text-secondary placeholder:text-secondary/70 border rounded px-2 py-2 flex-1 min-w-0"
+        />
+        <div className="flex gap-2 mt-2 sm:mt-0">
+          <button
+            type="button"
+            className="bg-yellow-400 text-black px-3 py-2 rounded text-lg"
+            onClick={() => setShowEmojiPicker((v) => !v)}
+            title="Add emoji"
+          >
+            😊
+          </button>
+          <button
+            type="button"
+            className="bg-blue-400 text-white px-3 py-2 rounded text-base"
+            onClick={() => setShowGifPicker((v) => !v)}
+            title="Add GIF"
+          >
+            GIF
+          </button>
+          <button
+            type="submit"
+            className="bg-accent text-white px-4 py-2 rounded text-base"
+          >
+            Send
+          </button>
+        </div>
+        {showEmojiPicker && (
+          <div style={{ position: "absolute", bottom: "100%", left: 0 }}>
+            <EmojiPicker onSelect={handleEmojiSelect} />
+          </div>
+        )}
+        {showGifPicker && (
+          <div style={{ position: "absolute", bottom: "100%", right: 0 }}>
+            <GifPicker onSelect={handleGifSelect} />
+          </div>
+        )}
+      </form>
     </main>
   );
 }

@@ -20,7 +20,7 @@
     "posting": "Posting...",
     "post": "Post",
     "loadingFeed": "Loading feed...",
-    "noPosts": "No posts yet. Be the first to post!",
+    "noPosts": "No posts yet.",
     "user": "User",
     "loading": "Loading...",
     "connectWithOtherHalves": "Chat",
@@ -37,5 +37,15 @@
   "common": {
     "clear": "Clear",
     "copy": "Copy"
+  },
+  "welcome": {
+    "title": "Welcome to Avoca-do! 🥑",
+    "personalGreeting": "Hi {name}! Welcome to Avoca-do!",
+    "genericGreeting": "Welcome to Avoca-do!",
+    "howItWorks": "How to Find Your Other Halves",
+    "explanation": "Avoca-do helps you connect with like-minded people who share your interests and passions. To start discovering your perfect matches and building meaningful connections, you'll need to tell us what you're passionate about!",
+    "getStarted": "Ready to get started?",
+    "selectInterests": "Select Your Interests",
+    "footerNote": "Once you've selected your interests, you'll start seeing suggested other halves and can begin connecting with amazing people who share your passions!"
   }
 }

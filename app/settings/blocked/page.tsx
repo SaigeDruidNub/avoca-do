@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
+import UserAvatar from "../../../components/UserAvatar";
 
 interface RottenUser {
   id: string;
@@ -133,21 +134,12 @@ export default function RottenListSettingsPage() {
                   className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-primary/10 rounded-lg border border-gray-200"
                 >
                   <div className="flex items-center gap-3">
-                    {user.image ? (
-                      <Image
-                        src={user.image}
-                        alt={`${user.name}'s profile`}
-                        width={40}
-                        height={40}
-                        className="w-10 h-10 rounded-full border border-gray-300"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                        <span className="text-gray-600 text-sm font-medium">
-                          {user.name.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                    )}
+                    <UserAvatar
+                      src={user.image}
+                      alt={`${user.name}'s profile`}
+                      size="md"
+                      userId={user.id}
+                    />
                     <div>
                       <h3 className="font-medium text-secondary">
                         {user.name}

@@ -34,6 +34,10 @@ const UserSchema = new Schema({
     desktop: { type: Boolean, default: true },
     email: { type: Boolean, default: false },
   },
+  // Privacy settings
+  privacy: {
+    onlyDiscoverableByEmail: { type: Boolean, default: false },
+  },
   location: {
     type: { type: String, enum: ["Point"], default: "Point" },
     coordinates: { type: [Number], default: [0, 0] }, // [lng, lat]

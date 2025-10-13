@@ -34,5 +34,15 @@
   "common": {
     "clear": "清除",
     "copy": "复制"
+  },
+  "welcome": {
+    "title": "欢迎来到 Avoca-do！🥑",
+    "personalGreeting": "你好 {name}！欢迎来到 Avoca-do！",
+    "genericGreeting": "欢迎来到 Avoca-do！",
+    "howItWorks": "如何找到您的另一半",
+    "explanation": "Avoca-do 帮助您与志同道合、分享您的兴趣和热情的人建立联系。要开始发现您的完美匹配并建立有意义的连接，您需要告诉我们您的热情所在！",
+    "getStarted": "准备好开始了吗？",
+    "selectInterests": "选择您的兴趣",
+    "footerNote": "一旦您选择了兴趣爱好，就会开始看到推荐的另一半，并可以与分享您热情的精彩人群建立联系！"
   }
 }

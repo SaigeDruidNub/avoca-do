@@ -44,8 +44,27 @@ export async function GET(req: NextRequest) {
   const excludeUserIds = [me._id.toString(), ...blockedByMe, ...blockedMeIds];
 
   try {
-    // Search by name or email using case-insensitive regex
-    const searchRegex = new RegExp(query.trim(), "i");
+    // Check if query is a complete email address
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const isCompleteEmail = emailRegex.test(query.trim());
+
+    // Create search conditions based on query type
+    const searchConditions = [];
+
+    if (isCompleteEmail) {
+      // For email searches, find users by exact email match
+      searchConditions.push({ email: query.trim().toLowerCase() });
+    } else {
+      // For name searches, only include users who haven't enabled email-only discovery
+      const nameRegex = new RegExp(query.trim(), "i");
+      searchConditions.push({
+        name: { $regex: nameRegex },
+        $or: [
+          { "privacy.onlyDiscoverableByEmail": { $exists: false } },
+          { "privacy.onlyDiscoverableByEmail": false },
+        ],
+      });
+    }
 
     const users = await User.find({
       $and: [
@@ -53,10 +72,7 @@ export async function GET(req: NextRequest) {
           _id: { $nin: excludeUserIds },
         },
         {
-          $or: [
-            { name: { $regex: searchRegex } },
-            { email: { $regex: searchRegex } },
-          ],
+          $or: searchConditions,
         },
       ],
     })

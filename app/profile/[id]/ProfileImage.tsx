@@ -14,7 +14,12 @@ const ProfileImage: React.FC<ProfileImageProps> = ({ src, alt, className }) => {
     <img
       src={imgSrc}
       alt={alt}
-      className={className}
+      className={`object-cover ${className || ""}`}
+      style={{
+        objectFit: "cover",
+        aspectRatio: "1 / 1",
+        objectPosition: "center center",
+      }}
       onError={(e) => {
         const currentSrc = e.currentTarget.src;
         // Try to fix Google image URL if present

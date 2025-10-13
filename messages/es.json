@@ -34,5 +34,15 @@
   "common": {
     "clear": "Limpiar",
     "copy": "Copiar"
+  },
+  "welcome": {
+    "title": "¡Bienvenido a Avoca-do! 🥑",
+    "personalGreeting": "¡Hola {name}! ¡Bienvenido a Avoca-do!",
+    "genericGreeting": "¡Bienvenido a Avoca-do!",
+    "howItWorks": "Cómo Encontrar Tus Otras Mitades",
+    "explanation": "Avoca-do te ayuda a conectarte con personas que comparten tus intereses y pasiones. Para empezar a descubrir tus coincidencias perfectas y construir conexiones significativas, ¡necesitas contarnos sobre tus pasiones!",
+    "getStarted": "¿Listo para empezar?",
+    "selectInterests": "Selecciona Tus Intereses",
+    "footerNote": "¡Una vez que hayas seleccionado tus intereses, comenzarás a ver otras mitades sugeridas y podrás conectarte con personas increíbles que comparten tus pasiones!"
   }
 }

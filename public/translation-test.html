@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Translation Test</title>
+</head>
+<body>
+    <h1>Translation Test Page</h1>
+    <p>Hello, this is a test post.</p>
+    <div>This should be translated to Spanish.</div>
+    <span>Another piece of text to translate.</span>
+    
+    <script>
+        // Simple test to verify translation API
+        async function testTranslation() {
+            console.log("Testing translation API...");
+            
+            try {
+                const response = await fetch('/api/translate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        text: 'Hello world',
+                        targetLanguage: 'es'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log("✅ Translation API works:", data);
+                } else {
+                    console.error("❌ Translation API failed:", response.status);
+                }
+            } catch (error) {
+                console.error("❌ Translation API error:", error);
+            }
+        }
+        
+        // Test on page load
+        testTranslation();
+    </script>
+</body>
+</html>

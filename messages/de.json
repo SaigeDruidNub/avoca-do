@@ -34,5 +34,15 @@
   "common": {
     "clear": "Löschen",
     "copy": "Kopieren"
+  },
+  "welcome": {
+    "title": "Willkommen bei Avoca-do! 🥑",
+    "personalGreeting": "Hallo {name}! Willkommen bei Avoca-do!",
+    "genericGreeting": "Willkommen bei Avoca-do!",
+    "howItWorks": "Wie Sie Ihre Anderen Hälften Finden",
+    "explanation": "Avoca-do hilft Ihnen, sich mit Gleichgesinnten zu verbinden, die Ihre Interessen und Leidenschaften teilen. Um Ihre perfekten Matches zu entdecken und bedeutungsvolle Verbindungen aufzubauen, müssen Sie uns von Ihren Leidenschaften erzählen!",
+    "getStarted": "Bereit loszulegen?",
+    "selectInterests": "Ihre Interessen Auswählen",
+    "footerNote": "Sobald Sie Ihre Interessen ausgewählt haben, sehen Sie vorgeschlagene andere Hälften und können sich mit fantastischen Menschen verbinden, die Ihre Leidenschaften teilen!"
   }
 }
