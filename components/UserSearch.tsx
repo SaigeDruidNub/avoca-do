@@ -178,7 +178,7 @@ const UserSearch: React.FC<UserSearchProps> = ({
         !loading && (
           <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-lg">
             <div className="px-4 py-3 text-gray-400 text-center">
-              No users found matching "{query}"
+              No users found matching &quot;{query}&quot;
             </div>
           </div>
         )}

@@ -40,10 +40,24 @@ export async function GET(req: NextRequest) {
       .lean();
 
     // Get all user IDs to fetch names
-    const userIds = [
+    interface IMessage {
+      _id: any;
+      sender: any;
+      recipient: any;
+      content: string;
+      createdAt: Date;
+      read: boolean;
+    }
+
+    interface IUser {
+      _id: any;
+      name: string;
+    }
+
+    const userIds: string[] = [
       ...new Set([
-        ...messages.map((m) => m.sender.toString()),
-        ...messages.map((m) => m.recipient.toString()),
+        ...messages.map((m: IMessage) => m.sender.toString()),
+        ...messages.map((m: IMessage) => m.recipient.toString()),
       ]),
     ];
 

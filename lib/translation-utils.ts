@@ -64,7 +64,7 @@ class TranslationUtils {
   /**
    * Checks if text appears to be a name
    */
-  private isLikelyName(text: string): boolean {
+  public isLikelyName(text: string): boolean {
     const trimmedText = text.trim();
 
     // Check manual blocklist first (case-insensitive)
@@ -274,7 +274,7 @@ class TranslationUtils {
   /**
    * More aggressive name detection for standalone names
    */
-  private isVeryLikelyName(text: string): boolean {
+  public isVeryLikelyName(text: string): boolean {
     const trimmed = text.trim();
 
     // Short capitalized words are often names
@@ -735,28 +735,105 @@ if (typeof window !== "undefined") {
 
 // Make it available globally for debugging
 if (typeof window !== "undefined") {
-  (window as any).translationUtils = translationUtils;
-  (window as any).testNameDetection = (text: string) => {
+  (
+    window as typeof window & {
+      translationUtils?: TranslationUtils;
+      testNameDetection?: (text: string) => {
+        shouldTranslate: boolean;
+        isName: boolean;
+      };
+      clearNameCache?: () => void;
+      debugTranslation?: (text: string) => unknown;
+      inspectElement?: (element: Element) => unknown;
+      inspectBySelector?: (selector: string) => unknown;
+    }
+  ).translationUtils = translationUtils;
+  (
+    window as typeof window & {
+      translationUtils?: TranslationUtils;
+      testNameDetection?: (text: string) => {
+        shouldTranslate: boolean;
+        isName: boolean;
+      };
+      clearNameCache?: () => void;
+      debugTranslation?: (text: string) => unknown;
+      inspectElement?: (element: Element) => unknown;
+      inspectBySelector?: (selector: string) => unknown;
+    }
+  ).testNameDetection = (text: string) => {
     const shouldTranslate = translationUtils.shouldTranslate(text);
-    const isName = (translationUtils as any).isLikelyName(text);
+    const isName = (translationUtils as TranslationUtils).isLikelyName(text);
     return { shouldTranslate, isName };
   };
-  (window as any).clearNameCache = () => {
+  (
+    window as typeof window & {
+      clearNameCache?: () => void;
+      debugTranslation?: (text: string) => {
+        inBlocklist: boolean;
+        shouldTranslate: boolean;
+        isLikelyName: boolean;
+        isVeryLikelyName: boolean;
+        blocklistContents: string[];
+      };
+    }
+  ).clearNameCache = () => {
     translationUtils.clearBlockedNameCache();
     // Also clear browser localStorage translation cache
     localStorage.removeItem("translationCache");
   };
-  (window as any).debugTranslation = (text: string) => {
+  (
+    window as typeof window & {
+      clearNameCache?: () => void;
+      debugTranslation?: (text: string) => {
+        inBlocklist: boolean;
+        shouldTranslate: boolean;
+        isLikelyName: boolean;
+        isVeryLikelyName: boolean;
+        blocklistContents: string[];
+      };
+    }
+  ).debugTranslation = (text: string) => {
     return {
       inBlocklist: translationUtils.getNameBlocklist().includes(text),
       shouldTranslate: translationUtils.shouldTranslate(text),
-      isLikelyName: (translationUtils as any).isLikelyName(text),
-      isVeryLikelyName: (translationUtils as any).isVeryLikelyName(text),
+      isLikelyName: (translationUtils as TranslationUtils).isLikelyName(text),
+      isVeryLikelyName: (translationUtils as TranslationUtils).isVeryLikelyName(
+        text
+      ),
       blocklistContents: translationUtils.getNameBlocklist(),
     };
   };
 
-  (window as any).inspectElement = (element: Element) => {
+  (
+    window as typeof window & {
+      inspectElement?: (element: Element) => {
+        element: {
+          tagName: string;
+          className: string;
+          id: string;
+          textContent?: string;
+        };
+        isNameField: boolean;
+        shouldTranslateText: boolean;
+        extractableTextNodes: (string | undefined)[];
+      };
+      inspectBySelector?: (selector: string) => {
+        selector: string;
+        count: number;
+        elements: Array<{
+          element: {
+            tagName: string;
+            className: string;
+            id: string;
+            textContent?: string;
+          };
+          isNameField: boolean;
+          shouldTranslateText: boolean;
+          extractableTextNodes: (string | undefined)[];
+        }>;
+      };
+    }
+  ).inspectElement = (element: Element) => {
     const textNodes = translationUtils.extractTextNodes(element);
     return {
       element: {
@@ -765,7 +842,7 @@ if (typeof window !== "undefined") {
         id: element.id,
         textContent: element.textContent?.trim(),
       },
-      isNameField: (translationUtils as any).isNameField(element),
+      isNameField: (translationUtils as TranslationUtils).isNameField(element),
       shouldTranslateText: translationUtils.shouldTranslate(
         element.textContent?.trim() || ""
       ),
@@ -773,13 +850,56 @@ if (typeof window !== "undefined") {
     };
   };
 
-  (window as any).inspectBySelector = (selector: string) => {
+  (
+    window as typeof window & {
+      inspectElement?: (element: Element) => {
+        element: {
+          tagName: string;
+          className: string;
+          id: string;
+          textContent?: string;
+        };
+        isNameField: boolean;
+        shouldTranslateText: boolean;
+        extractableTextNodes: (string | undefined)[];
+      };
+      inspectBySelector?: (selector: string) => {
+        selector: string;
+        count: number;
+        elements: Array<{
+          element: {
+            tagName: string;
+            className: string;
+            id: string;
+            textContent?: string;
+          };
+          isNameField: boolean;
+          shouldTranslateText: boolean;
+          extractableTextNodes: (string | undefined)[];
+        }>;
+      };
+    }
+  ).inspectBySelector = (selector: string) => {
     const elements = document.querySelectorAll(selector);
     return {
       selector,
       count: elements.length,
-      elements: Array.from(elements).map((el, i) =>
-        (window as any).inspectElement(el)
+      elements: Array.from(elements).map((el) =>
+        (
+          window as typeof window & {
+            inspectElement?: (element: Element) => {
+              element: {
+                tagName: string;
+                className: string;
+                id: string;
+                textContent?: string;
+              };
+              isNameField: boolean;
+              shouldTranslateText: boolean;
+              extractableTextNodes: (string | undefined)[];
+            };
+          }
+        ).inspectElement!(el)
       ),
     };
   };

@@ -16,18 +16,18 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
   // Find users from the friends array
-interface OtherHalf {
+  interface OtherHalf {
     _id: string;
     name: string;
     image?: string;
-}
+  }
 
-let otherHalves: OtherHalf[] = [];
+  let otherHalves: OtherHalf[] = [];
   if (Array.isArray(me.friends) && me.friends.length > 0) {
     const users = await User.find({ _id: { $in: me.friends } })
       .select("_id name image")
       .lean();
-    otherHalves = users.map((user: any) => ({
+    otherHalves = users.map((user: OtherHalf) => ({
       _id: user._id.toString(),
       name: user.name as string,
       image: user.image as string | undefined,

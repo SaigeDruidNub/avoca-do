@@ -365,8 +365,9 @@ export function AutoTranslationProvider({
                 const data = await response.json();
 
                 if (data.translations) {
+                  type TranslationResult = { translatedText: string };
                   data.translations.forEach(
-                    (translation: any, index: number) => {
+                    (translation: TranslationResult, index: number) => {
                       if (translation.translatedText && batchNodes[index]) {
                         const originalText = batchNodes[index].textContent;
                         batchNodes[index].textContent =

@@ -10,7 +10,7 @@ const EmojiPicker: React.FC<EmojiPickerProps> = ({ onSelect }) => {
   return (
     <Picker
       data={data}
-      onEmojiSelect={(emoji: any) => onSelect(emoji.native)}
+      onEmojiSelect={(emoji: { native: string }) => onSelect(emoji.native)}
       theme="light"
       previewPosition="none"
       skinTonePosition="none"

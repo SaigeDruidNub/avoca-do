@@ -3,7 +3,8 @@
 // Chunk loading error handler
 if (typeof window !== "undefined") {
   // Handle dynamic import errors globally
-  const originalImport = (window as any).__webpack_require__;
+  const originalImport = (window as Window & { __webpack_require__?: unknown })
+    .__webpack_require__;
 
   // Override error handling for chunk loading
   window.addEventListener("error", (event) => {
@@ -53,9 +54,9 @@ if (typeof window !== "undefined") {
 
   // Add retry logic for dynamic imports
   const retryDynamicImport = (
-    importFn: () => Promise<any>,
+    importFn: () => Promise<unknown>,
     retries = 3
-  ): Promise<any> => {
+  ): Promise<unknown> => {
     return importFn().catch((error) => {
       if (
         retries > 0 &&
@@ -76,7 +77,9 @@ if (typeof window !== "undefined") {
   };
 
   // Make retry function globally available
-  (window as any).retryDynamicImport = retryDynamicImport;
+  (
+    window as Window & { retryDynamicImport?: typeof retryDynamicImport }
+  ).retryDynamicImport = retryDynamicImport;
 }
 
 export default function ChunkLoadErrorHandler() {

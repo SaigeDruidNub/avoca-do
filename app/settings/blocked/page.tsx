@@ -112,8 +112,8 @@ export default function RottenListSettingsPage() {
               Your rotten list is empty
             </h3>
             <p className="text-primary">
-              You haven't added anyone to your rotten list yet. When you add
-              someone, they'll appear here.
+              You haven&apos;t added anyone to your rotten list yet. When you
+              add someone, they&apos;ll appear here.
             </p>
           </div>
         ) : (

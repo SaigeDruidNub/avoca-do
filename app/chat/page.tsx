@@ -54,7 +54,17 @@ export default function ChatPage() {
           // Check for 'with' URL parameter to pre-select recipient
           const urlParams = new URLSearchParams(window.location.search);
           const withUserId = urlParams.get("with");
-          if (withUserId && data.some((user: any) => user._id === withUserId)) {
+          if (
+            withUserId &&
+            data.some(
+              (user: {
+                _id: string;
+                name: string;
+                image?: string;
+                email?: string;
+              }) => user._id === withUserId
+            )
+          ) {
             setRecipient(withUserId);
           }
         }

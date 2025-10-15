@@ -113,8 +113,8 @@ export default function OtherHalvesSettingsPage() {
               No other halves yet
             </h3>
             <p className="text-primary">
-              You haven't connected with any other halves yet. When you make
-              friends, they'll appear here.
+              You haven&apos;t connected with any other halves yet. When you
+              make friends, they&apos;ll appear here.
             </p>
           </div>
         ) : (

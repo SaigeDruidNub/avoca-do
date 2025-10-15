@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
   // Find current user and get exclude IDs
   const userEmail = session?.user?.email;
   let excludeIds: string[] = [];
-  let currentUser: any = null;
+  let currentUser: SuggestedUser | null = null;
 
   if (userEmail) {
     currentUser = await User.findOne({ email: userEmail }).lean();
@@ -66,18 +66,33 @@ export async function GET(req: NextRequest) {
         .select("_id")
         .lean();
 
-      const blockedByIds = usersWhoBlockedMe.map((u) => String(u._id));
+      const blockedByIds: string[] = usersWhoBlockedMe.map(
+        (u: { _id: unknown }) => String(u._id)
+      );
       excludeIds.push(...blockedByIds);
     }
   }
 
-  let locationBasedUsers: any[] = [];
-  let interestBasedUsers: any[] = [];
+  type SuggestedUser = {
+    _id: string;
+    name?: string;
+    image?: string;
+    location?: { coordinates?: [number, number] };
+    interests?: string[];
+    blocked?: string[];
+    friends?: string[];
+    sharedInterests?: string[];
+    distance?: number | null;
+    matchType?: "location" | "interests" | "fallback";
+  };
+  let locationBasedUsers: SuggestedUser[] = [];
+  let interestBasedUsers: SuggestedUser[] = [];
+  let suggested: SuggestedUser[] = [];
 
   // 1. Try location-based matching first (for users who have shared location)
   if (lat !== 0 || lng !== 0) {
     try {
-      const query: any = {
+      const query: Record<string, unknown> = {
         $and: [
           {
             $or: [
@@ -128,9 +143,11 @@ export async function GET(req: NextRequest) {
     // Sort by number of shared interests descending
     interestBasedUsers = interestBasedUsers
       .map((u) => {
-        const sharedInterests = currentUser.interests.filter(
-          (interest: string) => u.interests?.includes(interest)
-        );
+        const sharedInterests = Array.isArray(currentUser?.interests)
+          ? currentUser.interests.filter((interest: string) =>
+              u.interests?.includes(interest)
+            )
+          : [];
         return { ...u, sharedInterests };
       })
       .filter((u) => u.sharedInterests.length > 0)
@@ -144,8 +161,9 @@ export async function GET(req: NextRequest) {
     return {
       ...u,
       _id: String(u._id),
-      distance: getDistance(lat, lng, userLat, userLng),
+      distance: getDistance(lat, lng, userLat, userLng) ?? 0,
       matchType: "location" as const,
+      sharedInterests: u.sharedInterests ?? [],
     };
   });
 
@@ -157,7 +175,7 @@ export async function GET(req: NextRequest) {
     return {
       ...u,
       _id: String(u._id),
-      distance: null, // No distance for interest-based matches
+      distance: null,
       matchType: "interests" as const,
       sharedInterests: sharedInterests,
     };
@@ -170,7 +188,7 @@ export async function GET(req: NextRequest) {
   );
 
   // 5. Combine results with location matches first, then interest matches
-  let suggested = [...locationResults, ...uniqueInterestResults];
+  suggested = [...locationResults, ...uniqueInterestResults];
 
   // 6. Fallback: if no results found, get some random users (excluding friends and self)
   if (suggested.length === 0 && userEmail) {
@@ -185,13 +203,23 @@ export async function GET(req: NextRequest) {
         .limit(5)
         .lean();
 
-      const fallbackResults = fallbackUsers.map((u) => ({
-        ...u,
-        _id: String(u._id),
-        distance: null,
-        matchType: "fallback" as const,
-      }));
-
+      const fallbackResults: SuggestedUser[] = fallbackUsers.map(
+        (u: {
+          _id: string;
+          name?: string;
+          image?: string;
+          location?: { coordinates?: [number, number] };
+          interests?: string[];
+          blocked?: string[];
+          friends?: string[];
+        }) => ({
+          ...u,
+          _id: String(u._id),
+          distance: null,
+          matchType: "fallback" as const,
+          sharedInterests: [],
+        })
+      );
       suggested = fallbackResults;
     } catch (error) {}
   }

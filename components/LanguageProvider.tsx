@@ -3,9 +3,9 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 
 type Locale = "en" | "es" | "fr" | "de" | "it" | "pt" | "zh" | "ja";
 
-interface Messages {
-  [key: string]: any;
-}
+type Messages = {
+  [key: string]: string | Messages;
+};
 
 interface LanguageContextType {
   locale: Locale;
@@ -87,7 +87,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   // Translation function
   const t = (key: string, params?: Record<string, string>): string => {
     const keys = key.split(".");
-    let value: any = messages;
+    let value: string | Messages = messages;
 
     for (const k of keys) {
       if (value && typeof value === "object" && k in value) {

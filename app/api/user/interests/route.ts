@@ -17,7 +17,10 @@ export async function POST(req: NextRequest) {
 
   await dbConnect();
 
-  const updateData: any = {
+  const updateData: {
+    interests: string[];
+    customInterests: Array<{ category: string; customInterest: string }>;
+  } = {
     interests,
     customInterests: customInterests || [],
   };

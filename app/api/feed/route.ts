@@ -92,9 +92,15 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(await image.arrayBuffer());
     try {
       await new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          { folder: "avocado-feed", resource_type: "image" },
-          (error, result) => {
+        const stream: NodeJS.WritableStream = cloudinary.uploader.upload_stream(
+          {
+            folder: "avocado-feed",
+            resource_type: "image",
+          },
+          (
+            error: Error | null,
+            result: { secure_url?: string } | undefined
+          ) => {
             if (error) reject(error);
             imageUrl = result?.secure_url || "";
             resolve(result);

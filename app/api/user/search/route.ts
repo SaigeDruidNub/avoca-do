@@ -38,7 +38,9 @@ export async function GET(req: NextRequest) {
   })
     .select("_id")
     .lean();
-  const blockedMeIds = usersWhoBlockedMe.map((u: any) => u._id.toString());
+  const blockedMeIds = usersWhoBlockedMe.map((u: { _id: string }) =>
+    u._id.toString()
+  );
 
   // Create exclusion list (current user + users blocked by me + users who blocked me)
   const excludeUserIds = [me._id.toString(), ...blockedByMe, ...blockedMeIds];
@@ -81,11 +83,13 @@ export async function GET(req: NextRequest) {
       .lean();
 
     // Format users for the frontend (exclude email for privacy)
-    const searchResults = users.map((user: any) => ({
-      _id: user._id.toString(),
-      name: user.name as string,
-      image: user.image as string | undefined,
-    }));
+    const searchResults = users.map(
+      (user: { _id: string; name: string; image?: string }) => ({
+        _id: user._id.toString(),
+        name: user.name as string,
+        image: user.image as string | undefined,
+      })
+    );
 
     return NextResponse.json(searchResults);
   } catch (error) {

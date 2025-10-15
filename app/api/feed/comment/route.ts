@@ -56,7 +56,16 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "Post not found" }, { status: 404 });
   }
 
-  const comment = post.comments.find((c: any) => c._id === commentId);
+  const comment = post.comments.find(
+    (c: {
+      _id: string;
+      userId: string;
+      userName: string;
+      message: string;
+      gifUrl: string;
+      createdAt: string;
+    }) => c._id === commentId
+  );
   if (!comment) {
     return NextResponse.json({ error: "Comment not found" }, { status: 404 });
   }
@@ -105,7 +114,16 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Post not found" }, { status: 404 });
   }
 
-  const comment = post.comments.find((c: any) => c._id === commentId);
+  const comment = post.comments.find(
+    (c: {
+      _id: string;
+      userId: string;
+      userName: string;
+      message: string;
+      gifUrl: string;
+      createdAt: string;
+    }) => c._id === commentId
+  );
   if (!comment) {
     return NextResponse.json({ error: "Comment not found" }, { status: 404 });
   }

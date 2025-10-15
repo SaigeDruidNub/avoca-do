@@ -91,7 +91,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
             // Socket disconnected
           });
 
-          newSocket.on("error", (error: any) => {
+          newSocket.on("error", (error: unknown) => {
             console.error("[NotificationProvider] Socket error:", error);
           });
 

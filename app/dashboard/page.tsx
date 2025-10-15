@@ -19,6 +19,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useTranslation } from "../../components/LanguageProvider";
+import { useNotifications } from "../../components/NotificationProvider";
 import { useTranslateContent } from "../../hooks/useTranslateContent";
 
 // Dynamically import heavy components to prevent chunk loading issues
@@ -84,8 +85,7 @@ export default function DashboardPage() {
   // Mobile menu state
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   // Notifications
-  const { refreshUnreadCount } =
-    require("../../components/NotificationProvider").useNotifications();
+  const { refreshUnreadCount } = useNotifications();
 
   const { t } = useTranslation();
   const { translatePosts, isEnabled: isTranslationEnabled } =
@@ -257,7 +257,7 @@ export default function DashboardPage() {
         setPosts(Array.isArray(data) ? data : []);
         // Collect unique userIds from posts
         const userIds = Array.from(
-          new Set((Array.isArray(data) ? data : []).map((p: any) => p.userId))
+          new Set((Array.isArray(data) ? data : []).map((p: Post) => p.userId))
         );
         // Fetch user info for each userId
         if (userIds.length > 0) {
@@ -268,9 +268,11 @@ export default function DashboardPage() {
             const users = await usersRes.json();
             // users: array of { _id, name, image }
             const map: Record<string, { name: string; image?: string }> = {};
-            users.forEach((u: any) => {
-              map[u._id] = { name: u.name, image: u.image };
-            });
+            users.forEach(
+              (u: { _id: string; name?: string; image?: string }) => {
+                map[u._id] = { name: u.name ?? "", image: u.image };
+              }
+            );
             setUserMap(map);
           } else {
             setUserMap(null);

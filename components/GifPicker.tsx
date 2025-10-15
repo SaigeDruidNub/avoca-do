@@ -8,7 +8,19 @@ interface GifPickerProps {
 
 const GifPicker: React.FC<GifPickerProps> = ({ onSelect }) => {
   const [search, setSearch] = useState("");
-  const [results, setResults] = useState<any[]>([]);
+  interface GifResult {
+    id: string;
+    content_description?: string;
+    media_formats?: {
+      tinygif?: { url?: string };
+      gif?: { url?: string };
+    };
+    media?: Array<{
+      tinygif?: { url?: string };
+      gif?: { url?: string };
+    }>;
+  }
+  const [results, setResults] = useState<GifResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -66,14 +78,22 @@ const GifPicker: React.FC<GifPickerProps> = ({ onSelect }) => {
         <div className="text-center text-red-600 text-sm mb-2">{error}</div>
       )}
       <div className="grid grid-cols-3 gap-2">
-        {results.map((gif: any) => (
+        {results.map((gif: GifResult) => (
           <img
             key={gif.id}
-            src={gif.media_formats?.tinygif?.url || gif.media[0]?.tinygif?.url}
+            src={
+              gif.media_formats?.tinygif?.url ||
+              (gif.media && gif.media[0]?.tinygif?.url) ||
+              ""
+            }
             alt={gif.content_description || "GIF"}
             className="w-full h-24 object-cover rounded cursor-pointer hover:opacity-80"
             onClick={() =>
-              onSelect(gif.media_formats?.gif?.url || gif.media[0]?.gif?.url)
+              onSelect(
+                gif.media_formats?.gif?.url ||
+                  (gif.media && gif.media[0]?.gif?.url) ||
+                  ""
+              )
             }
           />
         ))}

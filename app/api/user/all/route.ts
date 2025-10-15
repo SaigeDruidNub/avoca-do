@@ -30,7 +30,9 @@ export async function GET(req: NextRequest) {
   })
     .select("_id")
     .lean();
-  const blockedMeIds = usersWhoBlockedMe.map((u: any) => u._id.toString());
+  const blockedMeIds = usersWhoBlockedMe.map((u: { _id: string }) =>
+    u._id.toString()
+  );
 
   // Find users who have sent or received messages from the current user
   const messages = await Message.find({
@@ -41,7 +43,7 @@ export async function GET(req: NextRequest) {
 
   // Extract unique user IDs from messages (excluding current user)
   const messageUserIds = new Set<string>();
-  messages.forEach((msg: any) => {
+  messages.forEach((msg: { sender: string; recipient: string }) => {
     const senderId = msg.sender.toString();
     const recipientId = msg.recipient.toString();
 
@@ -75,11 +77,13 @@ export async function GET(req: NextRequest) {
     .lean();
 
   // Format users for the frontend (excluding email for privacy)
-  const allUsers = users.map((user: any) => ({
-    _id: user._id.toString(),
-    name: user.name as string,
-    image: user.image as string | undefined,
-  }));
+  const allUsers = users.map(
+    (user: { _id: string; name: string; image?: string }) => ({
+      _id: user._id.toString(),
+      name: user.name as string,
+      image: user.image as string | undefined,
+    })
+  );
 
   return NextResponse.json(allUsers);
 }

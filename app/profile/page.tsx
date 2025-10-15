@@ -21,7 +21,14 @@ export default function MyProfilePageWrapper() {
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [friends, setFriends] = useState<any[]>([]);
+  type Friend = {
+    _id: string;
+    name?: string;
+    email?: string;
+    image?: string;
+    interests?: string[];
+  };
+  const [friends, setFriends] = useState<Friend[]>([]);
   const [loadingFriends, setLoadingFriends] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
