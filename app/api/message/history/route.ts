@@ -41,16 +41,16 @@ export async function GET(req: NextRequest) {
 
     // Get all user IDs to fetch names
     interface IMessage {
-      _id: any;
-      sender: any;
-      recipient: any;
+      _id: string;
+      sender: string;
+      recipient: string;
       content: string;
       createdAt: Date;
       read: boolean;
     }
 
     interface IUser {
-      _id: any;
+      _id: string;
       name: string;
     }
 
@@ -67,12 +67,12 @@ export async function GET(req: NextRequest) {
       .lean();
 
     const userNamesMap: Record<string, string> = {};
-    users.forEach((user: any) => {
+    users.forEach((user: IUser) => {
       userNamesMap[user._id.toString()] = user.name;
     });
 
     // Add sender names to messages
-    const messagesWithNames = messages.map((msg: any) => ({
+    const messagesWithNames = messages.map((msg: IMessage) => ({
       _id: msg._id.toString(),
       sender: msg.sender.toString(),
       senderName: userNamesMap[msg.sender.toString()] || "Unknown User",

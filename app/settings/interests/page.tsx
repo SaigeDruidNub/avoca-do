@@ -376,9 +376,10 @@ export default function InterestsSettingsPage() {
                         className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-gray-700"
                       />
                       <p className="text-xs text-secondary mt-1">
-                        Separate multiple interests with commas (e.g., "Interest
-                        1, Interest 2, Interest 3"). Popular custom interests
-                        may be added to the official list in future updates.
+                        Separate multiple interests with commas (e.g.,
+                        &quot;Interest 1, Interest 2, Interest 3&quot;). Popular
+                        custom interests may be added to the official list in
+                        future updates.
                       </p>
                     </div>
                   )}
