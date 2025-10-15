@@ -48,7 +48,9 @@ export async function GET(req: NextRequest) {
   })
     .select("_id")
     .lean();
-  const mutualFriendIds = mutualFriends.map((u: any) => u._id.toString());
+  const mutualFriendIds = mutualFriends.map((u: { _id: string }) =>
+    u._id.toString()
+  );
   const feedIds = [myId, ...mutualFriendIds];
   const feedPosts = await Post.find({ userId: { $in: feedIds } })
     .sort({ createdAt: -1 })
