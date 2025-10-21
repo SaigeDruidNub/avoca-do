@@ -298,7 +298,7 @@ class TranslationUtils {
   /**
    * Checks if an element appears to be a name field
    */
-  private isNameField(element: Element): boolean {
+  public isNameField(element: Element): boolean {
     // Check element and all ancestors up to 5 levels (increased scope)
     let current: Element | null = element;
     let level = 0;

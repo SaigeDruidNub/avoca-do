@@ -27,9 +27,9 @@ export async function GET(req: NextRequest) {
     const users = await User.find({ _id: { $in: me.friends } })
       .select("_id name image")
       .lean();
-    otherHalves = users.map((user: OtherHalf) => ({
-      _id: user._id.toString(),
-      name: user.name as string,
+    otherHalves = users.map((user) => ({
+      _id: user._id?.toString?.() ?? String(user._id),
+      name: user.name ?? "Unknown User",
       image: user.image as string | undefined,
     }));
   }

@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import Message from "@/models/Message";
 import User from "@/models/User";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/authOptions";
 import dbConnect from "@/lib/mongodb";
 
 // GET: Fetch messages between two users

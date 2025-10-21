@@ -31,13 +31,21 @@ export async function GET(req: NextRequest) {
   // Find current user and get exclude IDs
   const userEmail = session?.user?.email;
   let excludeIds: string[] = [];
-  let currentUser: SuggestedUser | null = null;
+  let currentUser: {
+    _id?: unknown;
+    friends?: unknown[];
+    blocked?: unknown[];
+    interests?: string[];
+    [key: string]: unknown;
+  } | null = null;
 
   if (userEmail) {
-    currentUser = await User.findOne({ email: userEmail }).lean();
-
-    // Defensive: if currentUser is an array, use first element
-    if (Array.isArray(currentUser)) currentUser = currentUser[0];
+    const foundUser = await User.findOne({ email: userEmail }).lean();
+    if (Array.isArray(foundUser)) {
+      currentUser = foundUser[0] ?? null;
+    } else {
+      currentUser = foundUser;
+    }
     if (
       currentUser &&
       currentUser.friends &&
@@ -47,7 +55,7 @@ export async function GET(req: NextRequest) {
     }
     // Also exclude self
     if (currentUser && currentUser._id)
-      excludeIds.push(String(currentUser._id));
+      excludeIds.push(currentUser._id?.toString?.() ?? String(currentUser._id));
 
     // Exclude users that the current user has blocked
     if (
@@ -61,13 +69,13 @@ export async function GET(req: NextRequest) {
     // Find and exclude users who have blocked the current user
     if (currentUser && currentUser._id) {
       const usersWhoBlockedMe = await User.find({
-        blocked: String(currentUser._id),
+        blocked: currentUser._id?.toString?.() ?? String(currentUser._id),
       })
         .select("_id")
         .lean();
 
       const blockedByIds: string[] = usersWhoBlockedMe.map(
-        (u: { _id: unknown }) => String(u._id)
+        (u) => u._id?.toString?.() ?? String(u._id)
       );
       excludeIds.push(...blockedByIds);
     }
@@ -118,7 +126,10 @@ export async function GET(req: NextRequest) {
       if (interest) {
         query.interests = { $in: [interest] };
       }
-      locationBasedUsers = await User.find(query).lean();
+      locationBasedUsers = (await User.find(query).lean()).map((u) => ({
+        ...u,
+        _id: u._id?.toString?.() ?? String(u._id),
+      }));
     } catch (error) {
       locationBasedUsers = [];
     }
@@ -131,14 +142,19 @@ export async function GET(req: NextRequest) {
     Array.isArray(currentUser.interests) &&
     currentUser.interests.length > 0
   ) {
-    interestBasedUsers = await User.find({
-      interests: { $in: currentUser.interests },
-      $or: [
-        { "privacy.onlyDiscoverableByEmail": { $exists: false } },
-        { "privacy.onlyDiscoverableByEmail": false },
-      ],
-      ...(excludeIds.length > 0 ? { _id: { $nin: excludeIds } } : {}),
-    }).lean();
+    interestBasedUsers = (
+      await User.find({
+        interests: { $in: currentUser.interests },
+        $or: [
+          { "privacy.onlyDiscoverableByEmail": { $exists: false } },
+          { "privacy.onlyDiscoverableByEmail": false },
+        ],
+        ...(excludeIds.length > 0 ? { _id: { $nin: excludeIds } } : {}),
+      }).lean()
+    ).map((u) => ({
+      ...u,
+      _id: u._id?.toString?.() ?? String(u._id),
+    }));
 
     // Sort by number of shared interests descending
     interestBasedUsers = interestBasedUsers
@@ -203,23 +219,13 @@ export async function GET(req: NextRequest) {
         .limit(5)
         .lean();
 
-      const fallbackResults: SuggestedUser[] = fallbackUsers.map(
-        (u: {
-          _id: string;
-          name?: string;
-          image?: string;
-          location?: { coordinates?: [number, number] };
-          interests?: string[];
-          blocked?: string[];
-          friends?: string[];
-        }) => ({
-          ...u,
-          _id: String(u._id),
-          distance: null,
-          matchType: "fallback" as const,
-          sharedInterests: [],
-        })
-      );
+      const fallbackResults: SuggestedUser[] = fallbackUsers.map((u) => ({
+        ...u,
+        _id: u._id?.toString?.() ?? String(u._id),
+        distance: null,
+        matchType: "fallback" as const,
+        sharedInterests: [],
+      }));
       suggested = fallbackResults;
     } catch (error) {}
   }

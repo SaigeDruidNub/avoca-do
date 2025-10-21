@@ -56,8 +56,10 @@ export async function GET(req: NextRequest) {
 
     const userIds: string[] = [
       ...new Set([
-        ...messages.map((m: IMessage) => m.sender.toString()),
-        ...messages.map((m: IMessage) => m.recipient.toString()),
+        ...messages.map((m) => m.sender?.toString?.() ?? String(m.sender)),
+        ...messages.map(
+          (m) => m.recipient?.toString?.() ?? String(m.recipient)
+        ),
       ]),
     ];
 
@@ -67,18 +69,24 @@ export async function GET(req: NextRequest) {
       .lean();
 
     const userNamesMap: Record<string, string> = {};
-    users.forEach((user: IUser) => {
-      userNamesMap[user._id.toString()] = user.name;
+    users.forEach((user) => {
+      const id = user._id?.toString?.() ?? String(user._id);
+      userNamesMap[id] = user.name ?? "Unknown User";
     });
 
     // Add sender names to messages
-    const messagesWithNames = messages.map((msg: IMessage) => ({
-      _id: msg._id.toString(),
-      sender: msg.sender.toString(),
-      senderName: userNamesMap[msg.sender.toString()] || "Unknown User",
-      recipient: msg.recipient.toString(),
+    const messagesWithNames = messages.map((msg) => ({
+      _id: msg._id?.toString?.() ?? String(msg._id),
+      sender: msg.sender?.toString?.() ?? String(msg.sender),
+      senderName:
+        userNamesMap[msg.sender?.toString?.() ?? String(msg.sender)] ||
+        "Unknown User",
+      recipient: msg.recipient?.toString?.() ?? String(msg.recipient),
       content: msg.content,
-      createdAt: msg.createdAt.toISOString(),
+      createdAt:
+        msg.createdAt instanceof Date
+          ? msg.createdAt.toISOString()
+          : String(msg.createdAt),
       read: msg.read,
     }));
 

@@ -48,9 +48,12 @@ export async function GET(req: NextRequest) {
   })
     .select("_id")
     .lean();
-  const mutualFriendIds = mutualFriends.map((u: { _id: string }) =>
-    u._id.toString()
-  );
+  // _id is likely of type unknown or ObjectId, so use a generic type and always call toString
+  const mutualFriendIds = mutualFriends
+    .map((u: { _id: unknown }) =>
+      typeof u._id === "string" ? u._id : u._id?.toString()
+    )
+    .filter(Boolean) as string[];
   const feedIds = [myId, ...mutualFriendIds];
   const feedPosts = await Post.find({ userId: { $in: feedIds } })
     .sort({ createdAt: -1 })
@@ -94,14 +97,15 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(await image.arrayBuffer());
     try {
       await new Promise((resolve, reject) => {
+        // Use correct types for Cloudinary callback
         const stream: NodeJS.WritableStream = cloudinary.uploader.upload_stream(
           {
             folder: "avocado-feed",
             resource_type: "image",
           },
           (
-            error: Error | null,
-            result: { secure_url?: string } | undefined
+            error: import("cloudinary").UploadApiErrorResponse | undefined,
+            result: import("cloudinary").UploadApiResponse | undefined
           ) => {
             if (error) reject(error);
             imageUrl = result?.secure_url || "";

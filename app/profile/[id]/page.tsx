@@ -24,14 +24,16 @@ interface User {
 
 // This page is for /profile/[id]
 
+// Next.js 15+ expects params to be a Promise
 type PageProps = {
-  params: { id: string };
-  searchParams?: { [key: string]: string | string[] | undefined };
+  params: Promise<{ id: string }>;
+  searchParams?: Promise<unknown>;
 };
 
 export default async function ProfilePage({ params }: PageProps) {
+  const { id } = await params;
   await dbConnect();
-  const user = (await UserModel.findById(params.id).lean()) as User | null;
+  const user = (await UserModel.findById(id).lean()) as User | null;
   if (!user) notFound();
 
   return (
