@@ -24,11 +24,12 @@ interface User {
 
 // This page is for /profile/[id]
 
-export default async function ProfilePage({
-  params,
-}: {
+type PageProps = {
   params: { id: string };
-}) {
+  searchParams?: { [key: string]: string | string[] | undefined };
+};
+
+export default async function ProfilePage({ params }: PageProps) {
   await dbConnect();
   const user = (await UserModel.findById(params.id).lean()) as User | null;
   if (!user) notFound();
